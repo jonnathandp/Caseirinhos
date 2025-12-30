@@ -18,8 +18,14 @@ export async function GET() {
       take: 50
     })
 
+    // Adicionar numeração baseada na ordem de criação
+    const pedidosComNumero = pedidos.reverse().map((pedido, index) => ({
+      ...pedido,
+      numero: index + 1
+    })).reverse()
+
     console.log(`API: ${pedidos.length} pedidos encontrados`)
-    return NextResponse.json(pedidos)
+    return NextResponse.json(pedidosComNumero)
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error)
     return NextResponse.json({ error: 'Erro ao carregar pedidos' }, { status: 500 })
@@ -68,6 +74,16 @@ export async function POST(request: NextRequest) {
 
     console.log('API: Criando novo pedido para cliente:', clienteNome)
 
+    // Buscar o último número de pedido para gerar o próximo
+    const ultimoPedido = await prisma.order.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true }
+    })
+    
+    // Contar total de pedidos para gerar número sequencial
+    const totalPedidos = await prisma.order.count()
+    const numeroPedido = totalPedidos + 1
+
     // Criar o pedido
     const pedido = await prisma.order.create({
       data: {
@@ -110,8 +126,14 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log(`API: Pedido ${pedido.id} criado com sucesso`)
-    return NextResponse.json(pedidoCompleto, { status: 201 })
+    // Adicionar número sequencial ao resultado
+    const pedidoComNumero = {
+      ...pedidoCompleto,
+      numero: numeroPedido
+    }
+
+    console.log(`API: Pedido #${numeroPedido} (${pedido.id}) criado com sucesso`)
+    return NextResponse.json(pedidoComNumero, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar pedido:', error)
     return NextResponse.json({ error: 'Erro ao criar pedido' }, { status: 500 })

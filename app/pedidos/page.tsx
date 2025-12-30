@@ -15,6 +15,7 @@ import {
 
 interface Order {
   id: string
+  numero?: number
   cliente: {
     nome: string
     telefone?: string
@@ -184,6 +185,46 @@ export default function PedidosPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Pedidos</h1>
                 <p className="text-gray-600">Gerencie todos os pedidos</p>
               </div>
+            </div>            
+            <div className="flex gap-3">
+              <a
+                href="/loja"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Ver Loja Pública
+              </a>
+              <a
+                href="/publico"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                <Package2 className="h-4 w-4" />
+                Landing Page
+              </a>
+            </div>            
+            <div className="flex gap-3">
+              <a
+                href="/loja"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Ver Loja Pública
+              </a>
+              <a
+                href="/publico"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                <Package2 className="h-4 w-4" />
+                Landing Page
+              </a>
             </div>
           </div>
 
@@ -246,10 +287,11 @@ export default function PedidosPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Pedido #{order.id}
+                          <h3 className="text-lg font-semibold text-primary-600">
+                            Pedido #{order.numero || order.id.slice(-8).toUpperCase()}
                           </h3>
                           <p className="text-sm text-gray-600">{order.cliente.nome}</p>
+                          <p className="text-xs text-gray-400">ID: {order.id}</p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                           {getOrderStatusText(order.status)}
@@ -278,16 +320,27 @@ export default function PedidosPage() {
 
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">Itens do pedido:</h4>
-                          <div className="space-y-1">
+                          <div className="space-y-2">
                             {order.itens.map((item, index) => (
-                              <div key={index} className="text-sm text-gray-600">
-                                {item.quantidade}x {item.produto} - R$ {item.preco.toFixed(2)}
+                              <div key={index} className="flex justify-between items-center text-sm border-l-2 border-primary-200 pl-3 py-1">
+                                <div>
+                                  <span className="font-medium">{item.quantidade}x {item.produto}</span>
+                                  <span className="text-gray-500 ml-2">
+                                    (R$ {Number(item.preco).toFixed(2)} cada)
+                                  </span>
+                                </div>
+                                <span className="font-medium text-primary-600">
+                                  R$ {(Number(item.preco) * item.quantidade).toFixed(2)}
+                                </span>
                               </div>
                             ))}
                           </div>
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <div className="text-lg font-bold text-primary-600">
-                              Total: R$ {order.total.toFixed(2)}
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-lg font-bold text-gray-900">Total:</span>
+                              <span className="text-xl font-bold text-primary-600">
+                                R$ {Number(order.total).toFixed(2)}
+                              </span>
                             </div>
                           </div>
                         </div>
