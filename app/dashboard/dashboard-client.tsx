@@ -76,42 +76,10 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                   Caseirinhos Delicious
                 </h1>
               </div>
-              
-              {/* Navigation */}
-              <nav className="hidden md:ml-8 md:flex md:space-x-8">
-                <a 
-                  href="/produtos" 
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Produtos
-                </a>
-                <a 
-                  href="/pedidos" 
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Pedidos
-                </a>
-                <a 
-                  href="/clientes" 
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Clientes
-                </a>
-              </nav>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
-                <p className="text-xs text-gray-500">{session.user?.tipo}</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Sair"
-              >
-                <LogOut size={20} />
-              </button>
+            <div>
+              {/* Espaço vazio onde ficavam as informações do usuário */}
             </div>
           </div>
         </div>
