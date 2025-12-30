@@ -30,9 +30,25 @@ export default function DashboardClient({ session }: DashboardClientProps) {
         if (response.ok) {
           const data = await response.json()
           setStats(data)
+        } else {
+          console.error('Erro ao carregar estatísticas:', response.status)
+          // Usar dados padrão em caso de erro
+          setStats({
+            vendas: { hoje: 0, semana: 0, mes: 0 },
+            pedidos: { total: 0, pendentes: 0, prontos: 0 },
+            produtos: { total: 0, estoqueBaixo: 0 },
+            clientes: { total: 0, novos: 0 }
+          })
         }
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error)
+        // Usar dados padrão em caso de erro
+        setStats({
+          vendas: { hoje: 0, semana: 0, mes: 0 },
+          pedidos: { total: 0, pendentes: 0, prontos: 0 },
+          produtos: { total: 0, estoqueBaixo: 0 },
+          clientes: { total: 0, novos: 0 }
+        })
       } finally {
         setLoading(false)
       }
@@ -88,7 +104,10 @@ export default function DashboardClient({ session }: DashboardClientProps) {
 
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando dashboard...</p>
+            </div>
           </div>
         ) : (
           <>
