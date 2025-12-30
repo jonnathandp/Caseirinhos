@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const product = await prisma.produto.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id: params.id }
     })
 
@@ -44,7 +44,7 @@ export async function PUT(
 
     const { nome, preco, categoria, descricao, estoque } = await request.json()
 
-    const product = await prisma.produto.update({
+    const product = await prisma.product.update({
       where: { id: params.id },
       data: {
         nome,
@@ -73,7 +73,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    await prisma.produto.delete({
+    await prisma.product.delete({
       where: { id: params.id }
     })
 
