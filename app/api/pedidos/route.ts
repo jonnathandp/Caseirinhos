@@ -18,10 +18,10 @@ export async function GET() {
       take: 50
     })
 
-    // Adicionar numeração baseada na ordem de criação
+    // Adicionar numeração de 3 dígitos baseada na ordem de criação
     const pedidosComNumero = pedidos.reverse().map((pedido, index) => ({
       ...pedido,
-      numero: index + 1
+      numero: String(index + 1).padStart(3, '0')
     })).reverse()
 
     console.log(`API: ${pedidos.length} pedidos encontrados`)
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
   try {
     const { 
       clienteNome, 
+      clienteTelefone,
       total, 
       tipoEntrega, 
       endereco, 
@@ -74,19 +75,37 @@ export async function POST(request: NextRequest) {
 
     console.log('API: Criando novo pedido para cliente:', clienteNome)
 
-    // Buscar o último número de pedido para gerar o próximo
-    const ultimoPedido = await prisma.order.findFirst({
-      orderBy: { createdAt: 'desc' },
-      select: { id: true }
-    })
-    
-    // Contar total de pedidos para gerar número sequencial
+    // Buscar ou criar cliente
+    let cliente = null
+    if (clienteTelefone) {
+      cliente = await prisma.customer.findFirst({
+        where: { telefone: clienteTelefone }
+      })
+    }
+
+    if (!cliente && clienteNome) {
+      try {
+        cliente = await prisma.customer.create({
+          data: {
+            nome: clienteNome,
+            telefone: clienteTelefone || null,
+            endereco: tipoEntrega === 'delivery' ? endereco : null
+          }
+        })
+        console.log('API: Cliente criado:', cliente.id)
+      } catch (error) {
+        console.log('API: Erro ao criar cliente, continuando sem vincular:', error)
+      }
+    }
+
+    // Contar total de pedidos para gerar número sequencial de 3 dígitos
     const totalPedidos = await prisma.order.count()
-    const numeroPedido = totalPedidos + 1
+    const numeroPedido = String(totalPedidos + 1).padStart(3, '0')
 
     // Criar o pedido
     const pedido = await prisma.order.create({
       data: {
+        clienteId: cliente?.id || null,
         clienteNome,
         total,
         status: status || 'PENDENTE',

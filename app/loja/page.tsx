@@ -163,6 +163,7 @@ export default function LojaPage() {
     try {
       const orderData = {
         clienteNome: customerData.nome,
+        clienteTelefone: customerData.telefone,
         total: getTotalPrice(),
         tipoEntrega: customerData.tipoEntrega,
         endereco: customerData.tipoEntrega === 'delivery' ? customerData.endereco : null,

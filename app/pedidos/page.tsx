@@ -281,9 +281,9 @@ export default function PedidosPage() {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-primary-600">
-                            Pedido #{order.numero || order.id.slice(-8).toUpperCase()}
+                            Pedido #{order.numero || String(orders.indexOf(order) + 1).padStart(3, '0')}
                           </h3>
-                          <p className="text-sm text-gray-600">{order.cliente.nome}</p>
+                          <p className="text-sm text-gray-600">{order.cliente?.nome || order.cliente.nome}</p>
                           <p className="text-xs text-gray-400">ID: {order.id}</p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
