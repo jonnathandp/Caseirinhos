@@ -26,10 +26,10 @@ export async function POST() {
     if (userCount === 0) {
       await prisma.user.create({
         data: {
-          name: 'Administrador',
+          nome: 'Administrador',
           email: 'admin@caseirinhos.com',
-          password: await bcrypt.hash('admin123', 10),
-          role: 'ADMIN'
+          senha: await bcrypt.hash('admin123', 10),
+          tipo: 'ADMIN'
         }
       })
       console.log('Usuario admin criado')
