@@ -4,11 +4,24 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Permitir acesso às páginas de setup e API setup
-  if (pathname.startsWith('/setup') || 
-      pathname.startsWith('/api/setup-db') ||
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/favicon.ico')) {
+  // Rotas públicas que não precisam de autenticação
+  const publicRoutes = [
+    '/publico',
+    '/loja',
+    '/api/produtos', // Permitir acesso aos produtos para a loja
+    '/api/pedidos',  // Permitir criação de pedidos pelos clientes
+    '/setup',
+    '/api/setup-db',
+    '/api/health',
+    '/_next',
+    '/favicon.ico',
+    '/auth'
+  ]
+  
+  // Verificar se é uma rota pública
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  
+  if (isPublicRoute) {
     return NextResponse.next()
   }
 

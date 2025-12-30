@@ -52,3 +52,68 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Erro ao atualizar pedido' }, { status: 500 })
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const { 
+      clienteNome, 
+      total, 
+      tipoEntrega, 
+      endereco, 
+      dataEntrega, 
+      observacoes, 
+      status,
+      items 
+    } = await request.json()
+
+    console.log('API: Criando novo pedido para cliente:', clienteNome)
+
+    // Criar o pedido
+    const pedido = await prisma.order.create({
+      data: {
+        clienteNome,
+        total,
+        status: status || 'PENDENTE',
+        tipoEntrega: tipoEntrega || 'retirada',
+        endereco,
+        dataEntrega: dataEntrega ? new Date(dataEntrega) : null,
+        observacoes
+      }
+    })
+
+    // Criar os itens do pedido
+    if (items && items.length > 0) {
+      await Promise.all(items.map((item: any) => 
+        prisma.orderItem.create({
+          data: {
+            orderId: pedido.id,
+            productId: item.productId,
+            produtoNome: item.produtoNome,
+            quantidade: item.quantidade,
+            precoUnitario: item.precoUnitario,
+            subtotal: item.subtotal
+          }
+        })
+      ))
+    }
+
+    // Buscar o pedido completo
+    const pedidoCompleto = await prisma.order.findUnique({
+      where: { id: pedido.id },
+      include: {
+        cliente: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
+    })
+
+    console.log(`API: Pedido ${pedido.id} criado com sucesso`)
+    return NextResponse.json(pedidoCompleto, { status: 201 })
+  } catch (error) {
+    console.error('Erro ao criar pedido:', error)
+    return NextResponse.json({ error: 'Erro ao criar pedido' }, { status: 500 })
+  }
+}
