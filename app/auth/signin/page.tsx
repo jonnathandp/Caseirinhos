@@ -38,8 +38,8 @@ export default function SignIn() {
       if (result?.error) {
         setError('Email ou senha inválidos')
       } else if (result?.ok) {
-        // Redirecionar para dashboard simples
-        window.location.href = '/simple-dashboard'
+        // Redirecionar para dashboard principal
+        window.location.href = '/dashboard'
       }
     } catch (error) {
       setError('Erro ao fazer login. Tente novamente.')

@@ -69,13 +69,35 @@ export default function DashboardClient({ session }: DashboardClientProps) {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <span className="text-2xl">🍰</span>
+                <a href="/dashboard" className="text-2xl">🍰</a>
               </div>
               <div className="ml-4">
                 <h1 className="text-xl font-semibold text-gray-900">
                   Caseirinhos Delicious
                 </h1>
               </div>
+              
+              {/* Navigation */}
+              <nav className="hidden md:ml-8 md:flex md:space-x-8">
+                <a 
+                  href="/produtos" 
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Produtos
+                </a>
+                <a 
+                  href="/pedidos" 
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Pedidos
+                </a>
+                <a 
+                  href="/clientes" 
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Clientes
+                </a>
+              </nav>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -127,7 +149,10 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <a 
+                href="/pedidos" 
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow block"
+              >
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <ShoppingBag className="h-6 w-6 text-blue-600" />
@@ -142,9 +167,12 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                     </p>
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <a 
+                href="/produtos" 
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow block"
+              >
                 <div className="flex items-center">
                   <div className="p-2 bg-orange-100 rounded-lg">
                     <Package className="h-6 w-6 text-orange-600" />
@@ -162,9 +190,12 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                     )}
                   </div>
                 </div>
-              </div>
+              </a>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <a 
+                href="/clientes" 
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow block"
+              >
                 <div className="flex items-center">
                   <div className="p-2 bg-purple-100 rounded-lg">
                     <Users className="h-6 w-6 text-purple-600" />
@@ -179,7 +210,7 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                     </p>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
 
             {/* Sales Overview */}
@@ -243,26 +274,35 @@ export default function DashboardClient({ session }: DashboardClientProps) {
                 Ações Rápidas
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <a 
+                  href="/produtos"
+                  className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left block"
+                >
                   <div className="flex items-center">
                     <Package className="h-5 w-5 text-blue-600 mr-3" />
                     <span className="font-medium">Gerenciar Produtos</span>
                   </div>
-                </button>
+                </a>
                 
-                <button className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <a 
+                  href="/pedidos"
+                  className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left block"
+                >
                   <div className="flex items-center">
                     <ShoppingBag className="h-5 w-5 text-green-600 mr-3" />
                     <span className="font-medium">Novo Pedido</span>
                   </div>
-                </button>
+                </a>
                 
-                <button className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <a 
+                  href="/clientes"
+                  className="p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left block"
+                >
                   <div className="flex items-center">
                     <Users className="h-5 w-5 text-purple-600 mr-3" />
                     <span className="font-medium">Gerenciar Clientes</span>
                   </div>
-                </button>
+                </a>
               </div>
             </div>
           </>
