@@ -16,7 +16,9 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_PUBLIC_URL: process.env.DATABASE_PUBLIC_URL
-  }
+  },
+  // Evitar problemas de renderização estática durante build
+  output: 'standalone'
 }
 
 module.exports = nextConfig

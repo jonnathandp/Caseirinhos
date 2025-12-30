@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { execSync } from 'child_process'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     console.log('🗄️ Iniciando setup do banco...')

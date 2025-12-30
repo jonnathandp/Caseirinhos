@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
-    // Testar conexão com banco
+    // Durante build, retornar status básico
+    if (process.env.NODE_ENV !== 'production') {
+      return NextResponse.json({
+        status: 'build-time',
+        message: 'Health check during build'
+      })
+    }
+
+    // Testar conexão com banco apenas em produção
     const userCount = await prisma.user.count()
     
     return NextResponse.json({

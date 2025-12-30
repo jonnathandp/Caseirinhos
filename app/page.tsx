@@ -1,10 +1,18 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
 
 export default async function Home() {
+  // Durante o build, simplesmente redireciona para signin
+  if (process.env.NODE_ENV === 'development' || !process.env.DATABASE_URL) {
+    redirect('/auth/signin')
+  }
+
   try {
+    const { getServerSession } = await import('next-auth')
+    const { authOptions } = await import('@/lib/auth')
+    const { prisma } = await import('@/lib/prisma')
+    
     // Verificar se o banco está configurado
     await prisma.user.findFirst()
     
