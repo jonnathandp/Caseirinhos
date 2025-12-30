@@ -9,7 +9,11 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:setup": "node setup-db.js",
+    "postbuild": "prisma generate"
   },
   "dependencies": {
     "next": "^14.0.4",
