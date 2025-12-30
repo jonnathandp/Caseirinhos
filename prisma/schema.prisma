@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  nome          String
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  senha         String?
+  tipo          UserType  @default(FUNCIONARIO)
+  ativo         Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  nome        String   @unique
+  categoria   String
+  preco       Decimal  @db.Decimal(10, 2)
+  custo       Decimal  @default(0) @db.Decimal(10, 2)
+  descricao   String?
+  imagem      String?
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  estoque     Stock?
+  orderItems  OrderItem[]
+  sales       Sale[]
+
+  @@map("products")
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  nome             String
+  email            String?   @unique
+  telefone         String?   @unique
+  endereco         String?
+  dataNascimento   DateTime? @map("data_nascimento")
+  pontosFidelidade Int       @default(0) @map("pontos_fidelidade")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  orders Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  clienteId    String?     @map("cliente_id")
+  clienteNome  String      @map("cliente_nome")
+  total        Decimal     @db.Decimal(10, 2)
+  status       OrderStatus @default(PENDENTE)
+  tipoEntrega  String      @default("retirada") @map("tipo_entrega")
+  endereco     String?
+  dataPedido   DateTime    @default(now()) @map("data_pedido")
+  dataEntrega  DateTime?   @map("data_entrega")
+  observacoes  String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  cliente Customer? @relation(fields: [clienteId], references: [id])
+  items   OrderItem[]
+  sales   Sale[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String  @map("order_id")
+  productId     String  @map("product_id")
+  produtoNome   String  @map("produto_nome")
+  quantidade    Int
+  precoUnitario Decimal @db.Decimal(10, 2) @map("preco_unitario")
+  subtotal      Decimal @db.Decimal(10, 2)
+
+  // Relacionamentos
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Stock {
+  id                String   @id @default(cuid())
+  productId         String   @unique @map("product_id")
+  produtoNome       String   @map("produto_nome")
+  quantidade        Int      @default(0)
+  quantidadeMinima  Int      @default(5) @map("quantidade_minima")
+  unidade           String   @default("unidade")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("stock")
+}
+
+model Ingredient {
+  id            String    @id @default(cuid())
+  nome          String    @unique
+  quantidade    Decimal   @db.Decimal(10, 3)
+  unidade       String
+  custoUnitario Decimal   @db.Decimal(10, 2) @map("custo_unitario")
+  fornecedor    String?
+  dataValidade  DateTime? @map("data_validade")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("ingredients")
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  orderId       String   @map("order_id")
+  productId     String   @map("product_id")
+  produtoNome   String   @map("produto_nome")
+  quantidade    Int
+  precoUnitario Decimal  @db.Decimal(10, 2) @map("preco_unitario")
+  subtotal      Decimal  @db.Decimal(10, 2)
+  dataVenda     DateTime @default(now()) @map("data_venda")
+
+  // Relacionamentos
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("sales")
+}
+
+enum UserType {
+  ADMIN
+  FUNCIONARIO
+  CLIENTE
+}
+
+enum OrderStatus {
+  PENDENTE
+  CONFIRMADO
+  PREPARANDO
+  PRONTO
+  ENTREGUE
+  CANCELADO
+}
