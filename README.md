@@ -1,164 +1,107 @@
-# 🧁 Caseirinhos Delicious - Sistema de Gestão para Doceria
+# 🍰 Sistema Caseirinhos Delicious
 
-Sistema completo de gestão para doceria desenvolvido com **Next.js 14**, **TypeScript**, **Prisma ORM** e **PostgreSQL**.
+Sistema completo de gestão para doceria com PostgreSQL e deploy no Railway.
 
-## 🚀 Funcionalidades
+![Sistema Caseirinhos](https://img.shields.io/badge/Sistema-Caseirinhos%20Delicious-orange)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![React](https://img.shields.io/badge/React-18+-blue)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
+![Railway](https://img.shields.io/badge/Deploy-Railway-purple)
 
-### 👥 Sistema de Usuários
-- **Administrador**: Acesso completo ao sistema
-- **Funcionário**: Gestão de produtos, pedidos, clientes e estoque
-- **Cliente**: Visualização de pedidos e perfil
+## 🚀 Funcionalidades Principais
 
-### 📦 Gestão de Produtos
-- ✅ Cadastro completo de produtos com imagens
-- ✅ Categorização (Bolos, Tortas, Doces, etc.)
-- ✅ Controle de preços e status (ativo/inativo)
-- ✅ Sistema de busca e filtros avançados
+### 📊 **Dashboard Executivo**
+- Métricas em tempo real
+- Gráficos de vendas
+- Alertas de estoque
+- KPIs financeiros
 
-### 🛒 Gestão de Pedidos
-- ✅ Criação e acompanhamento de pedidos
-- ✅ Status: Pendente → Confirmado → Preparando → Pronto → Entregue
-- ✅ Cálculo automático de totais
-- ✅ Controle de estoque automático
+### 🧁 **Gestão Completa**
+- **Produtos**: Cadastro, categorias, preços e custos
+- **Pedidos**: Sistema completo com status e delivery
+- **Clientes**: Base completa com histórico
+- **Estoque**: Controle automático com alertas
+- **Ingredientes**: Gestão de matéria-prima
+- **Relatórios**: Análises detalhadas
+- **Fidelidade**: Programa de pontos automático
 
-### 👤 Gestão de Clientes
-- ✅ Cadastro completo de clientes
-- ✅ Sistema de pontos de fidelidade
-- ✅ Histórico de pedidos e compras
+### 🌐 **Sistema Online**
+- Interface responsiva
+- Sistema público de pedidos
+- Banco PostgreSQL
+- Deploy automático no Railway
 
-### 📊 Controle de Estoque
-- ✅ Gestão de estoque por produto
-- ✅ Alertas de estoque baixo
-- ✅ Controle de ingredientes com validade
+## 🛠️ Tecnologias
 
-### 🚚 Sistema de Delivery
-- ✅ Agendamento de entregas
-- ✅ Controle de endereços
-- ✅ Status de entrega
+**Backend:**
+- Node.js + Express
+- PostgreSQL + Prisma
+- JWT Authentication
+- bcryptjs
 
-### 📈 Relatórios e Dashboard
-- ✅ Dashboard com estatísticas em tempo real
-- ✅ Gráficos de vendas e pedidos
-- ✅ Produtos mais vendidos
-- ✅ Relatórios financeiros
+**Frontend:**
+- React 18
+- Tailwind CSS
+- React Query
+- React Router
 
-## 🛠️ Tecnologias Utilizadas
+**Deploy:**
+- Railway
+- Docker
+- GitHub Actions
 
-### Frontend
-- **Next.js 14** - Framework React com App Router
-- **TypeScript** - Tipagem estática
-- **Tailwind CSS** - Framework CSS utilitário
-- **React Hook Form** - Gerenciamento de formulários
-- **Chart.js** - Gráficos e visualizações
-- **React Hot Toast** - Notificações
-- **Lucide React** - Ícones modernos
-
-### Backend
-- **Next.js API Routes** - API RESTful
-- **Prisma ORM** - ORM moderno para TypeScript
-- **PostgreSQL** - Banco de dados relacional
-- **NextAuth.js** - Autenticação completa
-- **Zod** - Validação de schemas
-
-### Infraestrutura
-- **Railway** - Deploy e hospedagem
-- **Vercel** - Deploy do frontend (alternativo)
-
-## 📋 Pré-requisitos
-
-- Node.js 18+ 
-- PostgreSQL 14+
-- npm ou yarn
-
-## 🚀 Instalação e Configuração
+## ⚡ Início Rápido
 
 ### 1. Clone o repositório
 ```bash
 git clone <repository-url>
-cd caseirinhos-nextjs
+cd caseirinhos-system
 ```
 
-### 2. Instale as dependências
+### 2. Instale dependências
 ```bash
-npm install
+npm run install-all
 ```
 
-### 3. Configure as variáveis de ambiente
-Crie um arquivo `.env.local` na raiz do projeto:
+### 3. Configurar Banco de Dados
+Siga o guia: [`docs/POSTGRESQL_SETUP.md`](docs/POSTGRESQL_SETUP.md)
 
-```env
-# Database
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/caseirinhos_db"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="seu-secret-super-seguro-aqui"
-
-# Opcional: Para produção
-RAILWAY_DATABASE_URL="postgresql://..."
-```
-
-### 4. Configure o banco de dados
+### 4. Configure variáveis de ambiente
 ```bash
-# Gerar o cliente Prisma
-npx prisma generate
-
-# Executar migrações
-npx prisma db push
-
-# Popular com dados de exemplo
-npx prisma db seed
+cp backend/.env.example backend/.env
+# Edite o arquivo .env com suas configurações
 ```
 
-### 5. Execute o projeto
+### 5. Execute localmente
 ```bash
 npm run dev
 ```
 
-O sistema estará disponível em `http://localhost:3000`
+Acesse: http://localhost:3000
 
-## 👤 Contas Demo
+## 🚀 Deploy no Railway
 
-### Administrador
-- **Email**: admin@caseirinhos.com
-- **Senha**: admin123
-- **Acesso**: Completo ao sistema
+Siga o guia completo: [`docs/RAILWAY_DEPLOY.md`](docs/RAILWAY_DEPLOY.md)
 
-### Funcionário
-- **Email**: funcionario@caseirinhos.com
-- **Senha**: func123
-- **Acesso**: Gestão operacional
+### Deploy Rápido:
+1. Conecte seu repositório ao Railway
+2. Configure as variáveis de ambiente
+3. Deploy automático!
 
-### Cliente
-- **Email**: cliente@caseirinhos.com
-- **Senha**: cliente123
-- **Acesso**: Visualização de pedidos
-
-## 📁 Estrutura do Projeto
+## 📊 Estrutura do Projeto
 
 ```
-caseirinhos-nextjs/
-├── prisma/
-│   ├── schema.prisma          # Schema do banco de dados
-│   └── seed.ts               # Dados de exemplo
-├── src/
-│   ├── app/                  # App Router do Next.js
-│   │   ├── api/             # API Routes
-│   │   ├── dashboard/       # Páginas do dashboard
-│   │   └── page.tsx         # Página de login
-│   ├── components/          # Componentes React
-│   │   ├── auth/           # Componentes de autenticação
-│   │   ├── dashboard/      # Componentes do dashboard
-│   │   ├── layout/         # Layout e navegação
-│   │   └── products/       # Componentes de produtos
-│   ├── lib/                # Utilitários e configurações
-│   │   ├── auth.ts         # Configuração NextAuth
-│   │   ├── prisma.ts       # Cliente Prisma
-│   │   └── utils.ts        # Funções utilitárias
-│   └── types/              # Definições TypeScript
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
+caseirinhos-system/
+├── backend/                 # API Node.js
+│   ├── routes/             # Rotas da API
+│   ├── config/             # Configurações
+│   └── server.js           # Servidor principal
+├── frontend/               # Interface React
+│   ├── src/
+│   │   ├── components/     # Componentes reutilizáveis
+│   │   ├── pages/          # Páginas da aplicação
+│   │   └── contexts/       # Contextos React
+├── docs/                   # Documentação
 └── README.md
 ```
 
@@ -166,89 +109,123 @@ caseirinhos-nextjs/
 
 ```bash
 # Desenvolvimento
-npm run dev
+npm run dev              # Frontend + Backend
+npm run server          # Apenas backend
+npm run client          # Apenas frontend
 
-# Build para produção
-npm run build
+# Produção
+npm run build           # Build do frontend
+npm start              # Servidor de produção
 
-# Iniciar produção
-npm start
-
-# Linting
-npm run lint
-
-# Prisma
-npm run db:generate    # Gerar cliente
-npm run db:push       # Aplicar mudanças
-npm run db:seed       # Popular dados
-npm run db:studio     # Interface visual
+# Instalação
+npm run install-all    # Instala todas as dependências
 ```
 
-## 🚀 Deploy
+## 📱 Funcionalidades por Usuário
 
-### Railway (Recomendado)
-1. Conecte seu repositório ao Railway
-2. Configure as variáveis de ambiente
-3. O deploy será automático
+### 👨‍💼 **Administrador**
+- ✅ Acesso completo ao sistema
+- ✅ Gestão de usuários
+- ✅ Configurações avançadas
+- ✅ Relatórios financeiros
 
-### Vercel
-1. Conecte seu repositório ao Vercel
-2. Configure as variáveis de ambiente
-3. Configure um banco PostgreSQL (Supabase, PlanetScale, etc.)
+### 👩‍🍳 **Funcionário**
+- ✅ Gestão de produtos e pedidos
+- ✅ Controle de estoque
+- ✅ Atendimento ao cliente
+- ✅ Relatórios operacionais
 
-## 📊 Funcionalidades Detalhadas
+### 👤 **Cliente**
+- ✅ Sistema público de pedidos
+- ✅ Acompanhamento de status
+- ✅ Programa de fidelidade
+- ✅ Histórico de compras
 
-### Dashboard
-- Estatísticas em tempo real
-- Gráficos de vendas por período
-- Produtos mais vendidos
-- Pedidos recentes
-- Alertas de estoque
+## 🎯 Casos de Uso
 
-### Gestão de Produtos
-- CRUD completo
-- Upload de imagens
-- Categorização
-- Controle de estoque
-- Filtros avançados
+### 🏪 **Para Doceiras**
+- Controle completo do negócio
+- Gestão de receitas e custos
+- Programa de fidelidade automático
+- Relatórios para tomada de decisão
 
-### Gestão de Pedidos
-- Fluxo completo de pedidos
-- Controle de status
-- Cálculos automáticos
-- Histórico detalhado
+### 🏢 **Para Pequenas Empresas**
+- Sistema profissional
+- Baixo custo operacional
+- Escalabilidade automática
+- Backup seguro na nuvem
 
-### Sistema de Fidelidade
-- Pontos por compra
-- Recompensas automáticas
-- Histórico de pontos
+### 📱 **Para Clientes**
+- Pedidos online fáceis
+- Acompanhamento em tempo real
+- Programa de pontos
+- Histórico completo
 
 ## 🔒 Segurança
 
-- Autenticação JWT com NextAuth.js
-- Autorização baseada em roles
-- Validação de dados com Zod
-- Sanitização de inputs
-- HTTPS obrigatório em produção
+- ✅ Autenticação JWT
+- ✅ Senhas criptografadas
+- ✅ Rate limiting
+- ✅ Validação de dados
+- ✅ HTTPS automático
+
+## 📈 Métricas e Analytics
+
+- 📊 Dashboard executivo
+- 📈 Gráficos de vendas
+- 💰 Análise financeira
+- 👥 Comportamento de clientes
+- 📦 Controle de estoque
+- 🎯 KPIs personalizados
+
+## 🌟 Diferenciais
+
+### 💾 **Google Sheets como Database**
+- ✅ Backup automático
+- ✅ Acesso via planilha
+- ✅ Colaboração em tempo real
+- ✅ Sem custos de database
+
+### 🚀 **Deploy Simplificado**
+- ✅ Railway com 1 clique
+- ✅ HTTPS automático
+- ✅ Escalabilidade automática
+- ✅ Monitoramento incluído
+
+### 🎨 **Interface Moderna**
+- ✅ Design responsivo
+- ✅ UX otimizada
+- ✅ Componentes reutilizáveis
+- ✅ Acessibilidade
+
+## 📞 Suporte
+
+- 📖 **Documentação**: [`docs/`](docs/)
+- 🐛 **Issues**: Abra uma issue no GitHub
+- 💬 **Discussões**: Use as Discussions do GitHub
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+2. Crie sua feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📝 Licença
+## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## 📞 Suporte
+## 🎉 Agradecimentos
 
-Para suporte e dúvidas:
-- 📧 Email: suporte@caseirinhos.com
-- 💬 WhatsApp: (11) 99999-9999
+- Google Sheets API
+- Railway Platform
+- React Community
+- Tailwind CSS
+- Lucide Icons
 
 ---
 
-**Desenvolvido com ❤️ para a Caseirinhos Delicious**
+**Desenvolvido com ❤️ para transformar negócios de doceria**
+
+[🚀 Deploy no Railway](https://railway.app) | [📋 PostgreSQL Setup](docs/POSTGRESQL_SETUP.md) | [📚 Documentação Completa](docs/README.md)
