@@ -129,7 +129,7 @@ export default function EstoquePage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="flex items-center mb-4 sm:mb-0">
-              <BoxIcon className="h-8 w-8 text-primary-600 mr-3" />
+              <Box className="h-8 w-8 text-primary-600 mr-3" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Estoque</h1>
                 <p className="text-gray-600">Controle de inventário e movimentações</p>
