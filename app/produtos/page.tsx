@@ -26,6 +26,7 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [filterLowStock, setFilterLowStock] = useState(false)
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -122,10 +123,21 @@ export default function ProdutosPage() {
     setShowForm(true)
   }
 
-  const filteredProducts = products.filter(product => 
-    product && product.nome && 
-    product.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProducts = products.filter(product => {
+    if (!product || !product.nome) return false
+    
+    const searchLower = searchTerm.toLowerCase()
+    const matchesSearch = product.nome.toLowerCase().includes(searchLower) ||
+      (product.categoria && product.categoria.toLowerCase().includes(searchLower))
+    
+    if (filterLowStock) {
+      const hasLowStock = product.estoque && 
+        (product.estoque.quantidade || 0) <= (product.estoque.quantidadeMinima || 0)
+      return matchesSearch && hasLowStock
+    }
+    
+    return matchesSearch
+  })
 
   if (status === 'loading') {
     return (
@@ -171,15 +183,30 @@ export default function ProdutosPage() {
 
           {/* Barra de Pesquisa */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-              />
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar produtos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="filterLowStock"
+                  checked={filterLowStock}
+                  onChange={(e) => setFilterLowStock(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="filterLowStock" className="ml-2 block text-sm text-gray-700">
+                  Mostrar apenas produtos com estoque baixo
+                </label>
+              </div>
             </div>
           </div>
 
