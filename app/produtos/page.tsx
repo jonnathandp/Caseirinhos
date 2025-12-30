@@ -102,10 +102,15 @@ export default function ProdutosPage() {
           product.id === editingProduct.id 
             ? { 
                 ...product, 
-                ...formData,
+                nome: formData.nome,
+                descricao: formData.descricao,
                 preco: parseFloat(formData.preco),
-                estoque: parseInt(formData.estoque),
-                estoqueMinimo: parseInt(formData.estoqueMinimo)
+                categoria: formData.categoria,
+                estoque: {
+                  quantidade: parseInt(formData.estoque),
+                  quantidadeMinima: parseInt(formData.estoqueMinimo),
+                  unidade: product.estoque?.unidade || 'unidade'
+                }
               }
             : product
         ))
@@ -116,8 +121,11 @@ export default function ProdutosPage() {
           descricao: formData.descricao,
           preco: parseFloat(formData.preco),
           categoria: formData.categoria,
-          estoque: parseInt(formData.estoque),
-          estoqueMinimo: parseInt(formData.estoqueMinimo),
+          estoque: {
+            quantidade: parseInt(formData.estoque),
+            quantidadeMinima: parseInt(formData.estoqueMinimo),
+            unidade: 'unidade'
+          },
           ativo: true,
           createdAt: new Date().toISOString()
         }
