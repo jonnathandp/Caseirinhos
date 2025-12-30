@@ -1,53 +1,175 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { formatCurrency } from '@/utils'
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+import { Plus, Package, Search, Edit, Trash2, AlertTriangle, X } from 'lucide-react'
+import AppLayout from '../../src/components/layout/AppLayout'
 
 interface Product {
   id: string
   nome: string
-  categoria: string
   preco: number
-  custo: number
+  categoria: string
   descricao?: string
-  imagem?: string
-  ativo: boolean
-  estoque?: {
-    quantidade: number
-    quantidadeMinima: number
-    unidade: string
-  }
+  estoque: number
 }
 
-export default function Produtos() {
+export default function ProdutosPage() {
   const { data: session, status } = useSession()
-  const router = useRouter()
-  const [produtos, setProdutos] = useState<Product[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [showForm, setShowForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
-    categoria: '',
     preco: '',
-    custo: '',
+    categoria: '',
     descricao: '',
-    imagem: '',
-    quantidadeInicial: '',
-    quantidadeMinima: '5',
-    unidade: 'unidade'
+    estoque: ''
   })
 
   useEffect(() => {
+    if (status === 'loading') return
     if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-      return
+      redirect('/auth/signin')
     }
+  }, [status])
+
+  useEffect(() => {
+    if (session) {
+      loadProducts()
+    }
+  }, [session])
+
+  const loadProducts = async () => {
+    try {
+      const response = await fetch('/api/produtos')
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     
-    if (status === 'authenticated') {
-      loadProdutos()
+    try {
+      const url = editingProduct ? `/api/produtos/${editingProduct.id}` : '/api/produtos'
+      const method = editingProduct ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          preco: parseFloat(formData.preco),
+          estoque: parseInt(formData.estoque)
+        }),
+      })
+
+      if (response.ok) {
+        setFormData({ nome: '', preco: '', categoria: '', descricao: '', estoque: '' })
+        setShowForm(false)
+        setEditingProduct(null)
+        loadProducts()
+      }
+    } catch (error) {
+      console.error('Erro ao salvar produto:', error)
     }
+  }
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product)
+    setFormData({
+      nome: product.nome,
+      preco: product.preco.toString(),
+      categoria: product.categoria,
+      descricao: product.descricao || '',
+      estoque: product.estoque.toString()
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/produtos/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setProducts(products.filter(p => p.id !== id))
+        setShowDeleteModal(false)
+        setProductToDelete(null)
+      }
+    } catch (error) {
+      console.error('Erro ao deletar produto:', error)
+    }
+  }
+
+  const openDeleteModal = (id: string) => {
+    setProductToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingProduct(null)
+    setFormData({ nome: '', preco: '', categoria: '', descricao: '', estoque: '' })
+  }
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === 'Todos' || product.categoria === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const categories = ['Todos', ...Array.from(new Set(products.map(p => p.categoria)))]
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
+
+  return (
+    <AppLayout>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div className="flex items-center mb-4 sm:mb-0">
+              <Package className="h-8 w-8 text-primary-600 mr-3" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Produtos</h1>
+                <p className="text-gray-600">Gerencie seus produtos e estoque</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Produto
+            </button>
+          </div>
   }, [status, router])
 
   const loadProdutos = async () => {

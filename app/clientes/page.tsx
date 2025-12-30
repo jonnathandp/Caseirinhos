@@ -1,22 +1,23 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { formatDate } from '@/utils'
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+import { Plus, Users, Search, Edit, Trash2, X, Mail, Phone, MapPin } from 'lucide-react'
+import AppLayout from '../../src/components/layout/AppLayout'
 
-interface Cliente {
+interface Customer {
   id: string
   nome: string
   email?: string
   telefone?: string
   endereco?: string
-  dataNascimento?: Date
-  pontosFidelidade: number
-  createdAt: Date
+  dataNascimento?: string
+  observacoes?: string
+  createdAt: string
 }
 
-export default function Clientes() {
+export default function ClientesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [clientes, setClientes] = useState<Cliente[]>([])
