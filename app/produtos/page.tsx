@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { ShoppingBag, Search, Plus, Edit, Package, AlertTriangle, X } from 'lucide-react'
@@ -50,48 +50,47 @@ export default function ProdutosPage() {
     }
   }, [session])
 
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
+      console.log('Carregando produtos...')
+      setLoading(true)
+      
       // Buscar dados reais da API
-      const response = await fetch('/api/produtos')
+      const response = await fetch('/api/produtos', {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      console.log('Status da resposta:', response.status)
+      
       if (response.ok) {
         const productsData = await response.json()
+        console.log('Produtos carregados:', productsData.length)
         setProducts(productsData)
       } else {
-        console.error('Erro ao carregar produtos:', response.status)
-        // Fallback para dados mockados apenas se a API falhar
-        const fallbackData = [
-          {
-            id: '1',
-            nome: 'Queijo Minas',
-            descricao: 'Queijo minas fresco artesanal',
-            preco: 25.90,
-            categoria: 'Queijos',
-            estoque: { quantidade: 50, quantidadeMinima: 10, unidade: 'unidade' },
-            ativo: true,
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            nome: 'Queijo Prato',
-            descricao: 'Queijo prato tradicional',
-            preco: 32.50,
-            categoria: 'Queijos',
-            estoque: { quantidade: 8, quantidadeMinima: 15, unidade: 'unidade' },
-            ativo: true,
-            createdAt: new Date().toISOString()
-          }
-        ]
-        setProducts(fallbackData)
+        const errorText = await response.text()
+        console.error('Erro ao carregar produtos:', response.status, errorText)
+        
+        // Se não conseguir carregar da API, tenta novamente após delay
+        setTimeout(() => {
+          console.log('Tentando carregar produtos novamente...')
+          loadProducts()
+        }, 2000)
       }
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error)
-      // Fallback em caso de erro de rede
-      setProducts([])
+      console.error('Erro de rede ao carregar produtos:', error)
+      
+      // Retry após erro de rede
+      setTimeout(() => {
+        console.log('Retry apos erro de rede...')
+        loadProducts()
+      }, 3000)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
