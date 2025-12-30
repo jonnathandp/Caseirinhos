@@ -49,33 +49,44 @@ export default function ProdutosPage() {
 
   const loadProducts = async () => {
     try {
-      const productsData = [
-        {
-          id: '1',
-          nome: 'Queijo Minas',
-          descricao: 'Queijo minas fresco artesanal',
-          preco: 25.90,
-          categoria: 'Queijos',
-          estoque: 50,
-          estoqueMinimo: 10,
-          ativo: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          nome: 'Queijo Prato',
-          descricao: 'Queijo prato tradicional',
-          preco: 32.50,
-          categoria: 'Queijos',
-          estoque: 8,
-          estoqueMinimo: 15,
-          ativo: true,
-          createdAt: new Date().toISOString()
-        }
-      ]
-      setProducts(productsData)
+      // Buscar dados reais da API
+      const response = await fetch('/api/produtos')
+      if (response.ok) {
+        const productsData = await response.json()
+        setProducts(productsData)
+      } else {
+        console.error('Erro ao carregar produtos:', response.status)
+        // Fallback para dados mockados apenas se a API falhar
+        const fallbackData = [
+          {
+            id: '1',
+            nome: 'Queijo Minas',
+            descricao: 'Queijo minas fresco artesanal',
+            preco: 25.90,
+            categoria: 'Queijos',
+            estoque: 50,
+            estoqueMinimo: 10,
+            ativo: true,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: '2',
+            nome: 'Queijo Prato',
+            descricao: 'Queijo prato tradicional',
+            preco: 32.50,
+            categoria: 'Queijos',
+            estoque: 8,
+            estoqueMinimo: 15,
+            ativo: true,
+            createdAt: new Date().toISOString()
+          }
+        ]
+        setProducts(fallbackData)
+      }
     } catch (error) {
       console.error('Erro ao carregar produtos:', error)
+      // Fallback em caso de erro de rede
+      setProducts([])
     } finally {
       setLoading(false)
     }

@@ -49,32 +49,42 @@ export default function ClientesPage() {
 
   const loadCustomers = async () => {
     try {
-      // Dados mockados para demonstração
-      const customersData = [
-        {
-          id: '1',
-          nome: 'Maria Silva',
-          email: 'maria@email.com',
-          telefone: '(11) 99999-1111',
-          endereco: 'Rua das Flores, 123 - São Paulo, SP',
-          dataNascimento: '1985-03-15',
-          observacoes: 'Cliente preferencial',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          nome: 'João Santos',
-          email: 'joao@email.com',
-          telefone: '(11) 99999-2222',
-          endereco: 'Av. Principal, 456 - São Paulo, SP',
-          dataNascimento: '1990-07-22',
-          observacoes: '',
-          createdAt: new Date().toISOString()
-        }
-      ]
-      setCustomers(customersData)
+      // Buscar dados reais da API
+      const response = await fetch('/api/clientes')
+      if (response.ok) {
+        const customersData = await response.json()
+        setCustomers(customersData)
+      } else {
+        console.error('Erro ao carregar clientes:', response.status)
+        // Fallback para dados mockados apenas se a API falhar
+        const fallbackData = [
+          {
+            id: '1',
+            nome: 'Maria Silva',
+            email: 'maria@email.com',
+            telefone: '(11) 99999-1111',
+            endereco: 'Rua das Flores, 123 - São Paulo, SP',
+            dataNascimento: '1985-03-15',
+            observacoes: 'Cliente preferencial',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: '2',
+            nome: 'João Santos',
+            email: 'joao@email.com',
+            telefone: '(11) 99999-2222',
+            endereco: 'Av. Principal, 456 - São Paulo, SP',
+            dataNascimento: '1990-07-22',
+            observacoes: '',
+            createdAt: new Date().toISOString()
+          }
+        ]
+        setCustomers(fallbackData)
+      }
     } catch (error) {
       console.error('Erro ao carregar clientes:', error)
+      // Fallback em caso de erro de rede
+      setCustomers([])
     } finally {
       setLoading(false)
     }
