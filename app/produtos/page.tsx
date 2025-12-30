@@ -52,41 +52,30 @@ export default function ProdutosPage() {
 
   const loadProducts = useCallback(async () => {
     try {
-      console.log('Carregando produtos...')
       setLoading(true)
       
-      // Buscar dados reais da API
       const response = await fetch('/api/produtos', {
-        cache: 'no-store',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       })
       
-      console.log('Status da resposta:', response.status)
-      
       if (response.ok) {
         const productsData = await response.json()
-        console.log('Produtos carregados:', productsData.length)
-        setProducts(productsData)
+        if (Array.isArray(productsData)) {
+          setProducts(productsData)
+        } else {
+          console.error('Resposta da API não é um array:', productsData)
+          setProducts([])
+        }
       } else {
-        const errorText = await response.text()
-        console.error('Erro ao carregar produtos:', response.status, errorText)
-        
-        // Se não conseguir carregar da API, tenta novamente após delay
-        setTimeout(() => {
-          console.log('Tentando carregar produtos novamente...')
-          loadProducts()
-        }, 2000)
+        console.error('Erro ao carregar produtos:', response.status)
+        setProducts([])
       }
     } catch (error) {
-      console.error('Erro de rede ao carregar produtos:', error)
-      
-      // Retry após erro de rede
-      setTimeout(() => {
-        console.log('Retry apos erro de rede...')
-        loadProducts()
-      }, 3000)
+      console.error('Erro ao carregar produtos:', error)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -96,66 +85,90 @@ export default function ProdutosPage() {
     e.preventDefault()
     
     try {
+      const precoNum = parseFloat(formData.preco) || 0
+      const estoqueNum = parseInt(formData.estoque) || 0
+      const estoqueMinimoNum = parseInt(formData.estoqueMinimo) || 0
+
+      if (!formData.nome || !formData.categoria) {
+        alert('Nome e categoria são obrigatórios')
+        return
+      }
+
       if (editingProduct) {
-        setProducts(products.map(product => 
+        // Editar produto existente
+        const updatedProducts = products.map(product => 
           product.id === editingProduct.id 
             ? { 
                 ...product, 
                 nome: formData.nome,
-                descricao: formData.descricao,
-                preco: parseFloat(formData.preco),
+                descricao: formData.descricao || '',
+                preco: precoNum,
                 categoria: formData.categoria,
-                estoque: {
-                  quantidade: parseInt(formData.estoque),
-                  quantidadeMinima: parseInt(formData.estoqueMinimo),
-                  unidade: product.estoque?.unidade || 'unidade'
+                estoque: product.estoque ? {
+                  ...product.estoque,
+                  quantidade: estoqueNum,
+                  quantidadeMinima: estoqueMinimoNum
+                } : {
+                  quantidade: estoqueNum,
+                  quantidadeMinima: estoqueMinimoNum,
+                  unidade: 'unidade'
                 }
               }
             : product
-        ))
+        )
+        setProducts(updatedProducts)
       } else {
+        // Criar novo produto
         const newProduct: Product = {
           id: Date.now().toString(),
           nome: formData.nome,
-          descricao: formData.descricao,
-          preco: parseFloat(formData.preco),
+          descricao: formData.descricao || '',
+          preco: precoNum,
           categoria: formData.categoria,
           estoque: {
-            quantidade: parseInt(formData.estoque),
-            quantidadeMinima: parseInt(formData.estoqueMinimo),
+            quantidade: estoqueNum,
+            quantidadeMinima: estoqueMinimoNum,
             unidade: 'unidade'
           },
           ativo: true,
           createdAt: new Date().toISOString()
         }
-        setProducts([...products, newProduct])
+        setProducts(prevProducts => [...prevProducts, newProduct])
       }
 
+      // Limpar formulário
       setFormData({ nome: '', descricao: '', preco: '', categoria: '', estoque: '', estoqueMinimo: '' })
       setShowForm(false)
       setEditingProduct(null)
     } catch (error) {
       console.error('Erro ao salvar produto:', error)
+      alert('Erro ao salvar produto. Tente novamente.')
     }
   }
 
   const handleEdit = (product: Product) => {
+    if (!product) return
+    
     setEditingProduct(product)
     setFormData({
-      nome: product.nome,
+      nome: product.nome || '',
       descricao: product.descricao || '',
-      preco: product.preco.toString(),
-      categoria: product.categoria,
-      estoque: product.estoque?.quantidade.toString() || '0',
-      estoqueMinimo: product.estoque?.quantidadeMinima.toString() || '0'
+      preco: (product.preco || 0).toString(),
+      categoria: product.categoria || '',
+      estoque: (product.estoque?.quantidade || 0).toString(),
+      estoqueMinimo: (product.estoque?.quantidadeMinima || 0).toString()
     })
     setShowForm(true)
   }
 
-  const filteredProducts = products.filter(product =>
-    product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.categoria.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProducts = products.filter(product => {
+    if (!product || !product.nome) return false
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      product.nome.toLowerCase().includes(searchLower) ||
+      (product.categoria && product.categoria.toLowerCase().includes(searchLower))
+    )
+  })
 
   if (status === 'loading') {
     return (
@@ -207,14 +220,14 @@ export default function ProdutosPage() {
                       type="text"
                       placeholder="Nome do produto"
                       required
-                      value={formData.nome}
+                      value={formData.nome || ''}
                       onChange={(e) => setFormData({...formData, nome: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                     <input
                       type="text"
                       placeholder="Descrição"
-                      value={formData.descricao}
+                      value={formData.descricao || ''}
                       onChange={(e) => setFormData({...formData, descricao: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
@@ -224,7 +237,7 @@ export default function ProdutosPage() {
                         step="0.01"
                         placeholder="Preço"
                         required
-                        value={formData.preco}
+                        value={formData.preco || ''}
                         onChange={(e) => setFormData({...formData, preco: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
@@ -232,7 +245,7 @@ export default function ProdutosPage() {
                         type="text"
                         placeholder="Categoria"
                         required
-                        value={formData.categoria}
+                        value={formData.categoria || ''}
                         onChange={(e) => setFormData({...formData, categoria: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
@@ -242,7 +255,7 @@ export default function ProdutosPage() {
                         type="number"
                         placeholder="Estoque atual"
                         required
-                        value={formData.estoque}
+                        value={formData.estoque || ''}
                         onChange={(e) => setFormData({...formData, estoque: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
@@ -250,7 +263,7 @@ export default function ProdutosPage() {
                         type="number"
                         placeholder="Estoque mínimo"
                         required
-                        value={formData.estoqueMinimo}
+                        value={formData.estoqueMinimo || ''}
                         onChange={(e) => setFormData({...formData, estoqueMinimo: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
@@ -301,12 +314,15 @@ export default function ProdutosPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((product) => {
+                if (!product || !product.id) return null
+                
+                return (
                 <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{product.nome}</h3>
-                      <p className="text-sm text-gray-500">{product.categoria}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">{product.nome || 'Produto sem nome'}</h3>
+                      <p className="text-sm text-gray-500">{product.categoria || 'Sem categoria'}</p>
                     </div>
                     <button 
                       onClick={() => handleEdit(product)}
@@ -316,11 +332,11 @@ export default function ProdutosPage() {
                     </button>
                   </div>
                   
-                  <p className="text-gray-600 mb-4 text-sm">{product.descricao}</p>
+                  <p className="text-gray-600 mb-4 text-sm">{product.descricao || 'Sem descrição'}</p>
                   
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-2xl font-bold text-primary-600">
-                      R$ {product.preco.toFixed(2)}
+                      R$ {(product.preco || 0).toFixed(2)}
                     </span>
                   </div>
 
@@ -351,7 +367,8 @@ export default function ProdutosPage() {
                     </span>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
