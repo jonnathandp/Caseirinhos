@@ -9,3 +9,102 @@
 
  ✓ Starting...
  ✓ Ready in 1823ms
+ ✓ Compiled /api/produtos in 235ms (58 modules)
+prisma:query SELECT "public"."products"."id", "public"."products"."nome", "public"."products"."categoria", "public"."products"."preco", "public"."products"."custo", "public"."products"."descricao", "public"."products"."imagem", "public"."products"."ativo", "public"."products"."created_at", "public"."products"."updated_at" FROM "public"."products" WHERE "public"."products"."ativo" = $1 ORDER BY "public"."products"."nome" ASC OFFSET $2
+prisma:query SELECT "public"."stock"."id", "public"."stock"."product_id", "public"."stock"."produto_nome", "public"."stock"."quantidade", "public"."stock"."quantidade_minima", "public"."stock"."unidade", "public"."stock"."updated_at" FROM "public"."stock" WHERE "public"."stock"."product_id" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9
+ GET /api/produtos 200 in 2607ms
+ ✓ Compiled /middleware in 214ms (72 modules)
+ ○ Compiling /produtos ...
+ ✓ Compiled /produtos in 2.1s (627 modules)
+ GET /produtos?id=40ef5106-c670-4d55-96eb-e1ecc39e6a20&vscodeBrowserReqId=1767117572445 200 in 2228ms
+ ✓ Compiled in 149ms (302 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1428ms (854 modules)
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+Dashboard error: Error: NEXT_REDIRECT
+    at getRedirectError (webpack-internal:///(rsc)/./node_modules/next/dist/client/components/redirect.js:49:19)
+    at redirect (webpack-internal:///(rsc)/./node_modules/next/dist/client/components/redirect.js:60:11)
+    at Dashboard (webpack-internal:///(rsc)/./app/dashboard/page.tsx:25:70) {
+  digest: 'NEXT_REDIRECT;replace;/auth/signin;307;',
+  mutableCookies: p { _parsed: Map(0) {}, _headers: Headers {} }
+}
+ GET /dashboard 200 in 1563ms
+ ✓ Compiled /auth/signin in 144ms (872 modules)
+ GET /auth/signin?id=40ef5106-c670-4d55-96eb-e1ecc39e6a20&vscodeBrowserReqId=1767117586400 200 in 207ms
+ ✓ Compiled /api/auth/[...nextauth] in 90ms (573 modules)
+ GET /api/auth/session 200 in 421ms
+ GET /api/auth/session 200 in 8ms
+ GET /api/auth/session 200 in 5ms
+ GET /api/auth/session 200 in 5ms
+ ✓ Compiled /api/setup-db in 138ms (576 modules)
+🗄️ Iniciando setup do banco...
+📦 Gerando cliente Prisma...
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Error: 
+EPERM: operation not permitted, rename 'C:\Users\Bluetech\Caseirinhos\node_modules\.prisma\client\query_engine-windows.dll.node.tmp18024' -> 'C:\Users\Bluetech\Caseirinhos\node_modules\.prisma\client\query_engine-windows.dll.node'
+
+
+❌ Erro ao configurar banco: Error: Command failed: npx prisma generate
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execSync (node:child_process:997:15)
+    at POST (webpack-internal:///(rsc)/./app/api/setup-db/route.ts:18:64)
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:57234
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\lib\trace\tracer.js:140:36
+    at NoopContextManager.with (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\lib\trace\tracer.js:122:103
+    at NoopContextManager.with (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\lib\trace\tracer.js:122:28)
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:48896
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at Object.wrap (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:40958)
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:47472
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at Object.wrap (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:38293)
+    at C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:47434
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at eT.execute (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:46881)
+    at eT.handle (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:58771)
+    at doRender (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\base-server.js:1366:60)
+    at cacheEntry.responseCache.get.routeKind (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\base-server.js:1588:34)
+    at ResponseCache.get (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\response-cache\index.js:49:26)
+    at DevServer.renderToResponseWithComponentsImpl (C:\Users\Bluetech\Caseirinhos\node_modules\next\dist\server\base-server.js:1496:53) {
+  status: 1,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 22736,
+  stdout: null,
+  stderr: null
+}
+ POST /api/setup-db 500 in 1785ms
+ GET /auth/signin?id=6eb72f0a-07e2-46cf-bfe0-3107075a4820&vscodeBrowserReqId=1767117651187 200 in 74ms
+ GET /api/auth/session 200 in 16ms
+ GET /api/auth/session 200 in 6ms
+ GET /api/auth/session 200 in 5ms
+ GET /api/auth/session 200 in 5ms
+ GET /api/auth/providers 200 in 12ms
+ GET /api/auth/csrf 200 in 4ms
+ POST /api/auth/callback/credentials 200 in 6ms
+ GET /api/auth/session 200 in 4ms
+Dashboard error: Error: NEXT_REDIRECT
+    at getRedirectError (webpack-internal:///(rsc)/./node_modules/next/dist/client/components/redirect.js:49:19)
+    at redirect (webpack-internal:///(rsc)/./node_modules/next/dist/client/components/redirect.js:60:11)
+    at Dashboard (webpack-internal:///(rsc)/./app/dashboard/page.tsx:25:70) {
+  digest: 'NEXT_REDIRECT;replace;/auth/signin;307;',
+  mutableCookies: p { _parsed: Map(0) {}, _headers: Headers {} }
+}
+ GET /dashboard 200 in 50ms
+ GET /api/auth/session 200 in 7ms
+ GET /api/auth/session 200 in 4ms
+ GET /produtos 200 in 57ms
+ GET /api/auth/session 200 in 10ms
+ GET /api/auth/session 200 in 5ms
+ GET /api/auth/session 200 in 5ms
+ GET /api/auth/session 200 in 3ms
