@@ -9,7 +9,7 @@ interface Product {
   id: string
   nome: string
   descricao: string
-  preco: number
+  preco: number | string
   categoria: string
   estoque?: {
     quantidade: number
@@ -114,7 +114,7 @@ export default function ProdutosPage() {
     setFormData({
       nome: product.nome || '',
       descricao: product.descricao || '',
-      preco: product.preco ? product.preco.toString() : '',
+      preco: Number(product.preco || 0).toString(),
       categoria: product.categoria || '',
       estoque: product.estoque?.quantidade ? product.estoque.quantidade.toString() : '',
       estoqueMinimo: product.estoque?.quantidadeMinima ? product.estoque.quantidadeMinima.toString() : ''
@@ -308,7 +308,7 @@ export default function ProdutosPage() {
                   
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-2xl font-bold text-primary-600">
-                      R$ {(product.preco || 0).toFixed(2)}
+                      R$ {Number(product.preco || 0).toFixed(2)}
                     </span>
                   </div>
 
