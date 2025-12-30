@@ -9,12 +9,11 @@ import AppLayout from '@/components/layout/AppLayout'
 interface StockItem {
   id: string
   produtoId: string
-  nomeProduto: string
-  quantidadeAtual: number
+  produto: { nome: string; categoria: string; }
+  quantidade: number
   quantidadeMinima: number
+  unidade: string
   ultimaMovimentacao: string
-  tipoMovimentacao: 'entrada' | 'saida'
-  observacoes?: string
 }
 
 interface StockMovement {
