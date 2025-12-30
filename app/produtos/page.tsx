@@ -12,8 +12,11 @@ interface Product {
   descricao?: string
   preco: number
   categoria: string
-  estoque: number
-  estoqueMinimo: number
+  estoque?: {
+    quantidade: number
+    quantidadeMinima: number
+    unidade: string
+  } | null
   ativo: boolean
   createdAt: string
 }
@@ -64,8 +67,7 @@ export default function ProdutosPage() {
             descricao: 'Queijo minas fresco artesanal',
             preco: 25.90,
             categoria: 'Queijos',
-            estoque: 50,
-            estoqueMinimo: 10,
+            estoque: { quantidade: 50, quantidadeMinima: 10, unidade: 'unidade' },
             ativo: true,
             createdAt: new Date().toISOString()
           },
@@ -75,8 +77,7 @@ export default function ProdutosPage() {
             descricao: 'Queijo prato tradicional',
             preco: 32.50,
             categoria: 'Queijos',
-            estoque: 8,
-            estoqueMinimo: 15,
+            estoque: { quantidade: 8, quantidadeMinima: 15, unidade: 'unidade' },
             ativo: true,
             createdAt: new Date().toISOString()
           }
@@ -101,10 +102,15 @@ export default function ProdutosPage() {
           product.id === editingProduct.id 
             ? { 
                 ...product, 
-                ...formData,
+                nome: formData.nome,
+                descricao: formData.descricao,
                 preco: parseFloat(formData.preco),
-                estoque: parseInt(formData.estoque),
-                estoqueMinimo: parseInt(formData.estoqueMinimo)
+                categoria: formData.categoria,
+                estoque: {
+                  quantidade: parseInt(formData.estoque),
+                  quantidadeMinima: parseInt(formData.estoqueMinimo),
+                  unidade: product.estoque?.unidade || 'unidade'
+                }
               }
             : product
         ))
@@ -115,8 +121,11 @@ export default function ProdutosPage() {
           descricao: formData.descricao,
           preco: parseFloat(formData.preco),
           categoria: formData.categoria,
-          estoque: parseInt(formData.estoque),
-          estoqueMinimo: parseInt(formData.estoqueMinimo),
+          estoque: {
+            quantidade: parseInt(formData.estoque),
+            quantidadeMinima: parseInt(formData.estoqueMinimo),
+            unidade: 'unidade'
+          },
           ativo: true,
           createdAt: new Date().toISOString()
         }
@@ -138,8 +147,8 @@ export default function ProdutosPage() {
       descricao: product.descricao || '',
       preco: product.preco.toString(),
       categoria: product.categoria,
-      estoque: product.estoque.toString(),
-      estoqueMinimo: product.estoqueMinimo.toString()
+      estoque: product.estoque?.quantidade.toString() || '0',
+      estoqueMinimo: product.estoque?.quantidadeMinima.toString() || '0'
     })
     setShowForm(true)
   }
@@ -321,13 +330,13 @@ export default function ProdutosPage() {
                       <span className="text-gray-500">Estoque:</span>
                       <div className="flex items-center">
                         <Package className="h-4 w-4 mr-1 text-gray-400" />
-                        <span className={product.estoque <= product.estoqueMinimo ? 'text-red-600 font-medium' : 'text-gray-900'}>
-                          {product.estoque} unidades
+                        <span className={(product.estoque?.quantidade || 0) <= (product.estoque?.quantidadeMinima || 0) ? 'text-red-600 font-medium' : 'text-gray-900'}>
+                          {product.estoque?.quantidade || 0} {product.estoque?.unidade || 'unidades'}
                         </span>
                       </div>
                     </div>
                     
-                    {product.estoque <= product.estoqueMinimo && (
+                    {(product.estoque?.quantidade || 0) <= (product.estoque?.quantidadeMinima || 0) && (
                       <div className="flex items-center text-red-600 text-sm">
                         <AlertTriangle className="h-4 w-4 mr-1" />
                         <span>Estoque baixo!</span>
