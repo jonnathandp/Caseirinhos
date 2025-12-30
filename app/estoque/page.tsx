@@ -3,20 +3,28 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import { BoxIcon, Search, AlertTriangle, Plus, Minus, Package } from 'lucide-react'
+import { Package, Search, Plus, Edit, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
 import AppLayout from '../../src/components/layout/AppLayout'
 
 interface StockItem {
   id: string
   produtoId: string
-  produto: {
-    nome: string
-    categoria: string
-  }
-  quantidade: number
+  nomeProduto: string
+  quantidadeAtual: number
   quantidadeMinima: number
-  unidade: string
   ultimaMovimentacao: string
+  tipoMovimentacao: 'entrada' | 'saida'
+  observacoes?: string
+}
+
+interface StockMovement {
+  id: string
+  produtoId: string
+  quantidade: number
+  tipo: 'entrada' | 'saida'
+  motivo: string
+  data: string
+  usuario: string
 }
 
 export default function EstoquePage() {
