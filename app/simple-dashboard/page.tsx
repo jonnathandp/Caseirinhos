@@ -106,51 +106,93 @@ export default function SimpleDashboard() {
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Sistema Básico Funcionando
+              Funcionalidades do Sistema
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100">
-                    <span className="text-green-600 text-sm">✓</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a
+                href="/produtos"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">🧁</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Produtos</h4>
+                    <p className="text-sm text-gray-600">Gerenciar cardápio e preços</p>
                   </div>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Autenticação funcionando</p>
-                  <p className="text-sm text-gray-600">Login e logout estão operacionais</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100">
-                    <span className="text-green-600 text-sm">✓</span>
+              </a>
+
+              <a
+                href="/pedidos"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">📋</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Pedidos</h4>
+                    <p className="text-sm text-gray-600">Controlar vendas e entregas</p>
                   </div>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Banco de dados conectado</p>
-                  <p className="text-sm text-gray-600">PostgreSQL operacional no Railway</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100">
-                    <span className="text-green-600 text-sm">✓</span>
+              </a>
+
+              <a
+                href="/clientes"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">👥</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Clientes</h4>
+                    <p className="text-sm text-gray-600">Base de clientes e fidelidade</p>
                   </div>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Sessões funcionando</p>
-                  <p className="text-sm text-gray-600">Sistema de sessões ativo</p>
+              </a>
+
+              <a
+                href="/estoque"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">📦</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Estoque</h4>
+                    <p className="text-sm text-gray-600">Controle de ingredientes</p>
+                  </div>
                 </div>
-              </div>
+              </a>
+
+              <a
+                href="/vendas"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">💰</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Vendas</h4>
+                    <p className="text-sm text-gray-600">Relatórios e faturamento</p>
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href="/dashboard"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">📊</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 group-hover:text-primary-600">Dashboard Completo</h4>
+                    <p className="text-sm text-gray-600">Métricas e gráficos</p>
+                  </div>
+                </div>
+              </a>
             </div>
 
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="text-sm font-medium text-blue-900 mb-2">🎉 Parabéns!</h4>
               <p className="text-sm text-blue-700">
-                O sistema está funcionando perfeitamente! Você conseguiu fazer login com sucesso 
-                e todas as funcionalidades básicas estão operacionais.
+                O sistema está funcionando perfeitamente! Clique nas opções acima para explorar 
+                todas as funcionalidades da doceria.
               </p>
             </div>
           </div>
