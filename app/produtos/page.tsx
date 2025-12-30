@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { ShoppingBag, Search, Plus, Edit, Package, AlertTriangle, X } from 'lucide-react'
@@ -50,7 +50,7 @@ export default function ProdutosPage() {
     }
   }, [session])
 
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       console.log('Carregando produtos...')
       setLoading(true)
@@ -90,7 +90,7 @@ export default function ProdutosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
