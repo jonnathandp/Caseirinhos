@@ -54,52 +54,82 @@ export default function PedidosPage() {
 
   const loadOrders = async () => {
     try {
-      // Dados mockados para demonstração
-      const ordersData = [
-        {
-          id: '1',
-          cliente: {
-            nome: 'Maria Silva',
-            telefone: '(11) 99999-1111',
-            endereco: 'Rua das Flores, 123'
-          },
-          itens: [
-            { produto: 'Queijo Minas', quantidade: 2, preco: 25.90 }
-          ],
-          total: 51.80,
-          status: 'PENDENTE' as const,
-          dataEntrega: '2024-12-16',
-          observacoes: 'Entregar pela manhã',
-          createdAt: new Date().toISOString()
+      console.log('Carregando pedidos da API...')
+      const response = await fetch('/api/pedidos')
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar pedidos')
+      }
+      
+      const ordersData = await response.json()
+      console.log('Pedidos carregados:', ordersData.length)
+      
+      // Mapear dados do banco para o formato da interface
+      const mappedOrders = ordersData.map((order: any) => ({
+        id: order.id,
+        cliente: {
+          nome: order.cliente?.nome || 'Cliente não informado',
+          telefone: order.cliente?.telefone || '',
+          endereco: order.cliente?.endereco || ''
         },
-        {
-          id: '2',
-          cliente: {
-            nome: 'João Santos',
-            telefone: '(11) 99999-2222',
-            endereco: 'Av. Principal, 456'
-          },
-          itens: [
-            { produto: 'Queijo Prato', quantidade: 1, preco: 32.50 }
-          ],
-          total: 32.50,
-          status: 'PREPARANDO' as const,
-          dataEntrega: '2024-12-17',
-          createdAt: new Date().toISOString()
-        }
-      ]
-      setOrders(ordersData)
+        itens: order.items?.map((item: any) => ({
+          produto: item.product?.nome || 'Produto',
+          quantidade: item.quantidade || 1,
+          preco: Number(item.preco) || 0
+        })) || [],
+        total: Number(order.total) || 0,
+        status: order.status || 'PENDENTE',
+        dataEntrega: order.dataEntrega || order.dataPedido,
+        observacoes: order.observacoes || '',
+        createdAt: order.dataPedido || order.createdAt
+      }))
+      
+      setOrders(mappedOrders)
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error)
+      // Manter alguns dados de exemplo se a API falhar
+      setOrders([])
     } finally {
       setLoading(false)
     }
   }
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(orders.map(order =>
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ))
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      console.log(`Atualizando status do pedido ${orderId} para ${newStatus}`)
+      
+      // Atualizar no estado local primeiro para resposta imediata
+      setOrders(orders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ))
+      
+      // Enviar para a API
+      const response = await fetch('/api/pedidos', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar status no servidor')
+      }
+      
+      console.log('Status atualizado com sucesso no banco')
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error)
+      
+      // Reverter mudança local se houver erro
+      const originalOrder = orders.find(order => order.id === orderId)
+      if (originalOrder) {
+        setOrders(orders.map(order =>
+          order.id === orderId ? originalOrder : order
+        ))
+      }
+      
+      alert('Erro ao atualizar status do pedido. Tente novamente.')
+    }
   }
 
   const getStatusColor = (status: Order['status']) => {

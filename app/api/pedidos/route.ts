@@ -18,6 +18,7 @@ export async function GET() {
       take: 50
     })
 
+    console.log(`API: ${pedidos.length} pedidos encontrados`)
     return NextResponse.json(pedidos)
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error)
@@ -29,11 +30,22 @@ export async function PATCH(request: NextRequest) {
   try {
     const { id, status } = await request.json()
     
+    console.log(`API: Atualizando pedido ${id} para status ${status}`)
+    
     const pedido = await prisma.order.update({
       where: { id },
-      data: { status }
+      data: { status },
+      include: {
+        cliente: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
     })
 
+    console.log(`API: Pedido ${id} atualizado com sucesso`)
     return NextResponse.json(pedido)
   } catch (error) {
     console.error('Erro ao atualizar pedido:', error)
