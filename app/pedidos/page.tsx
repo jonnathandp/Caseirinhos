@@ -64,26 +64,39 @@ export default function PedidosPage() {
       
       const ordersData = await response.json()
       console.log('Pedidos carregados:', ordersData.length)
+      console.log('Dados dos pedidos:', ordersData)
       
       // Mapear dados do banco para o formato da interface
-      const mappedOrders = ordersData.map((order: any) => ({
-        id: order.id,
-        cliente: {
-          nome: order.cliente?.nome || 'Cliente não informado',
-          telefone: order.cliente?.telefone || '',
-          endereco: order.cliente?.endereco || ''
-        },
-        itens: order.items?.map((item: any) => ({
-          produto: item.product?.nome || 'Produto',
-          quantidade: item.quantidade || 1,
-          preco: Number(item.preco) || 0
-        })) || [],
-        total: Number(order.total) || 0,
-        status: order.status || 'PENDENTE',
-        dataEntrega: order.dataEntrega || order.dataPedido,
-        observacoes: order.observacoes || '',
-        createdAt: order.dataPedido || order.createdAt
-      }))
+      const mappedOrders = ordersData.map((order: any) => {
+        console.log('Order original:', order)
+        console.log('Items:', order.items)
+        
+        const mapped = {
+          id: order.id,
+          numero: order.numero,
+          cliente: {
+            nome: order.cliente?.nome || order.clienteNome || 'Cliente não informado',
+            telefone: order.cliente?.telefone || '',
+            endereco: order.cliente?.endereco || order.endereco || ''
+          },
+          itens: order.items?.map((item: any) => {
+            console.log('Item original:', item)
+            return {
+              produto: item.produtoNome || item.product?.nome || 'Produto',
+              quantidade: item.quantidade || 1,
+              preco: Number(item.precoUnitario) || Number(item.preco) || 0
+            }
+          }) || [],
+          total: Number(order.total) || 0,
+          status: order.status || 'PENDENTE',
+          dataEntrega: order.dataEntrega || order.dataPedido,
+          observacoes: order.observacoes || '',
+          createdAt: order.dataPedido || order.createdAt
+        }
+        
+        console.log('Order mapeada:', mapped)
+        return mapped
+      })
       
       setOrders(mappedOrders)
     } catch (error) {
@@ -185,26 +198,6 @@ export default function PedidosPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Pedidos</h1>
                 <p className="text-gray-600">Gerencie todos os pedidos</p>
               </div>
-            </div>            
-            <div className="flex gap-3">
-              <a
-                href="/loja"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Ver Loja Pública
-              </a>
-              <a
-                href="/publico"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Package2 className="h-4 w-4" />
-                Landing Page
-              </a>
             </div>            
             <div className="flex gap-3">
               <a
