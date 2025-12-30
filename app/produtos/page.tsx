@@ -228,58 +228,94 @@ export default function ProdutosPage() {
                   </div>
                   
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Nome do produto"
-                      required
-                      value={formData.nome}
-                      onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    
-                    <input
-                      type="text"
-                      placeholder="Descrição"
-                      value={formData.descricao}
-                      onChange={(e) => setFormData({...formData, descricao: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                        Nome do Produto *
+                      </label>
                       <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Preço"
+                        id="nome"
+                        type="text"
+                        placeholder="Ex: Brigadeiro Tradicional"
                         required
-                        value={formData.preco}
-                        onChange={(e) => setFormData({...formData, preco: e.target.value})}
+                        value={formData.nome}
+                        onChange={(e) => setFormData({...formData, nome: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
+                        Descrição
+                      </label>
                       <input
+                        id="descricao"
                         type="text"
-                        placeholder="Categoria"
-                        required
-                        value={formData.categoria}
-                        onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                        placeholder="Descrição do produto (opcional)"
+                        value={formData.descricao}
+                        onChange={(e) => setFormData({...formData, descricao: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="number"
-                        placeholder="Estoque atual"
-                        value={formData.estoque}
-                        onChange={(e) => setFormData({...formData, estoque: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Estoque mínimo"
-                        value={formData.estoqueMinimo}
-                        onChange={(e) => setFormData({...formData, estoqueMinimo: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                      />
+                      <div>
+                        <label htmlFor="preco" className="block text-sm font-medium text-gray-700 mb-1">
+                          Preço (R$) *
+                        </label>
+                        <input
+                          id="preco"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          required
+                          value={formData.preco}
+                          onChange={(e) => setFormData({...formData, preco: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
+                          Categoria *
+                        </label>
+                        <input
+                          id="categoria"
+                          type="text"
+                          placeholder="Ex: Doces, Salgados"
+                          required
+                          value={formData.categoria}
+                          onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="estoque" className="block text-sm font-medium text-gray-700 mb-1">
+                          Estoque Atual
+                        </label>
+                        <input
+                          id="estoque"
+                          type="number"
+                          placeholder="Quantidade disponível"
+                          value={formData.estoque}
+                          onChange={(e) => setFormData({...formData, estoque: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="estoqueMinimo" className="block text-sm font-medium text-gray-700 mb-1">
+                          Estoque Mínimo
+                        </label>
+                        <input
+                          id="estoqueMinimo"
+                          type="number"
+                          placeholder="Alerta de estoque baixo"
+                          value={formData.estoqueMinimo}
+                          onChange={(e) => setFormData({...formData, estoqueMinimo: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
                     </div>
                     
                     <div className="flex gap-3 pt-4">
