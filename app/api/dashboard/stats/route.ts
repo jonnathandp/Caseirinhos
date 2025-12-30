@@ -11,6 +11,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Verificar se o banco está configurado
+    try {
+      await prisma.user.findFirst()
+    } catch (dbError) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
     // Vendas hoje
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
