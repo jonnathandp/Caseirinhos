@@ -39,22 +39,30 @@ export async function POST(request: NextRequest) {
         custo: parseFloat(data.custo || 0),
         descricao: data.descricao,
         imagem: data.imagem,
-        ativo: true
+        ativo: data.ativo !== undefined ? data.ativo : true
       }
     })
 
-    // Criar estoque inicial
-    await prisma.stock.create({
-      data: {
-        productId: product.id,
-        produtoNome: product.nome,
-        quantidade: parseInt(data.quantidadeInicial || 0),
-        quantidadeMinima: parseInt(data.quantidadeMinima || 5),
-        unidade: data.unidade || 'unidade'
-      }
+    // Criar estoque inicial se fornecido
+    if (data.estoque) {
+      await prisma.stock.create({
+        data: {
+          productId: product.id,
+          produtoNome: product.nome,
+          quantidade: parseInt(data.estoque.quantidade || 0),
+          quantidadeMinima: parseInt(data.estoque.quantidadeMinima || 5),
+          unidade: data.estoque.unidade || 'unidade'
+        }
+      })
+    }
+
+    // Retornar o produto com estoque
+    const productWithStock = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: { estoque: true }
     })
 
-    return NextResponse.json(product)
+    return NextResponse.json(productWithStock)
   } catch (error) {
     console.error('Erro ao criar produto:', error)
     return NextResponse.json({ error: 'Erro ao criar produto' }, { status: 500 })

@@ -17,7 +17,8 @@ export async function GET(
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
+      include: { estoque: true }
     })
 
     if (!product) {
@@ -42,8 +43,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { nome, preco, categoria, descricao, estoque } = await request.json()
+    const { nome, preco, categoria, descricao, estoque, ativo } = await request.json()
 
+    // Atualizar o produto
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
@@ -51,11 +53,36 @@ export async function PUT(
         preco,
         categoria,
         descricao,
-        estoque
+        ativo
       }
     })
 
-    return NextResponse.json(product)
+    // Atualizar ou criar o estoque se fornecido
+    if (estoque) {
+      await prisma.stock.upsert({
+        where: { productId: params.id },
+        update: {
+          quantidade: estoque.quantidade || 0,
+          quantidadeMinima: estoque.quantidadeMinima || 0,
+          unidade: estoque.unidade || 'unidade'
+        },
+        create: {
+          productId: params.id,
+          produtoNome: nome,
+          quantidade: estoque.quantidade || 0,
+          quantidadeMinima: estoque.quantidadeMinima || 0,
+          unidade: estoque.unidade || 'unidade'
+        }
+      })
+    }
+
+    // Buscar o produto atualizado com estoque
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: params.id },
+      include: { estoque: true }
+    })
+
+    return NextResponse.json(updatedProduct)
   } catch (error) {
     console.error('Erro ao atualizar produto:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
