@@ -12,8 +12,10 @@ const nextConfig = {
     ]
   },
   env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'caseirinhos-secret-key'
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'https://caseirinhos.up.railway.app',
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_PUBLIC_URL: process.env.DATABASE_PUBLIC_URL
   }
 }
 
