@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import AppLayout from '@/src/components/layout/AppLayout'
+import AppLayout from '@/components/layout/AppLayout'
 import { 
   Users, 
   Mail, 
