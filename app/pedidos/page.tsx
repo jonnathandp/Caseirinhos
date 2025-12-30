@@ -284,7 +284,6 @@ export default function PedidosPage() {
                             Pedido #{order.numero || String(orders.indexOf(order) + 1).padStart(3, '0')}
                           </h3>
                           <p className="text-sm text-gray-600">{order.cliente?.nome || order.cliente.nome}</p>
-                          <p className="text-xs text-gray-400">ID: {order.id}</p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                           {getOrderStatusText(order.status)}
@@ -315,12 +314,9 @@ export default function PedidosPage() {
                           <h4 className="font-medium text-gray-900 mb-2">Itens do pedido:</h4>
                           <div className="space-y-2">
                             {order.itens.map((item, index) => (
-                              <div key={index} className="flex justify-between items-center text-sm border-l-2 border-primary-200 pl-3 py-1">
+                              <div key={index} className="flex justify-between items-center border-l-2 border-primary-200 pl-3 py-1">
                                 <div>
                                   <span className="font-medium">{item.quantidade}x {item.produto}</span>
-                                  <span className="text-gray-500 ml-2">
-                                    (R$ {Number(item.preco).toFixed(2)} cada)
-                                  </span>
                                 </div>
                                 <span className="font-medium text-primary-600">
                                   R$ {(Number(item.preco) * item.quantidade).toFixed(2)}
