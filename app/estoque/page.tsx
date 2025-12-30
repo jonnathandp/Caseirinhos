@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import { Package, Search, Plus, Edit, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react'
-import AppLayout from '../../src/components/layout/AppLayout'
+import { Package, Search, Plus, Edit, AlertTriangle, TrendingUp, TrendingDown, Box, Minus } from 'lucide-react'
+import AppLayout from '@/components/layout/AppLayout'
 
 interface StockItem {
   id: string

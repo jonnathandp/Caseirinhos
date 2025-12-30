@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { TrendingUp, Calendar, DollarSign, ShoppingBag, User, BarChart3 } from 'lucide-react'
-import AppLayout from '../../src/components/layout/AppLayout'
+import AppLayout from '@/components/layout/AppLayout'
 
 interface Sale {
   id: string
@@ -39,6 +39,7 @@ export default function VendasPage() {
     if (session) {
       loadSalesData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, selectedPeriod])
 
   const loadSalesData = async () => {
