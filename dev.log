@@ -108,3 +108,4 @@ Dashboard error: Error: NEXT_REDIRECT
  GET /api/auth/session 200 in 5ms
  GET /api/auth/session 200 in 5ms
  GET /api/auth/session 200 in 3ms
+ ✓ Compiled in 285ms (862 modules)
