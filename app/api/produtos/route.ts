@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    console.log('API: Buscando produtos no banco...')
+    
     const products = await prisma.product.findMany({
       where: { ativo: true },
       include: {
@@ -14,10 +16,14 @@ export async function GET() {
       orderBy: { nome: 'asc' }
     })
 
+    console.log(`API: ${products.length} produtos encontrados`)
     return NextResponse.json(products)
   } catch (error) {
-    console.error('Erro ao buscar produtos:', error)
-    return NextResponse.json({ error: 'Erro ao carregar produtos' }, { status: 500 })
+    console.error('API: Erro ao buscar produtos:', error)
+    return NextResponse.json({ 
+      error: 'Erro ao carregar produtos',
+      details: error instanceof Error ? error.message : 'Erro desconhecido'
+    }, { status: 500 })
   }
 }
 
