@@ -37,8 +37,9 @@ export default function SignIn() {
 
       if (result?.error) {
         setError('Email ou senha inválidos')
-      } else {
-        router.push('/dashboard')
+      } else if (result?.ok) {
+        // Redirecionar para dashboard simples
+        window.location.href = '/simple-dashboard'
       }
     } catch (error) {
       setError('Erro ao fazer login. Tente novamente.')
