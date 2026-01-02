@@ -10,9 +10,11 @@ interface Sale {
   id: string
   data: string
   cliente: string
+  clienteId?: string
   produtos: string[]
   total: number
   metodo: 'dinheiro' | 'pix' | 'cartao' | 'credito'
+  status?: string
 }
 
 interface DailyStats {
@@ -44,49 +46,22 @@ export default function VendasPage() {
 
   const loadSalesData = async () => {
     try {
-      // Simular dados de vendas
-      const salesData = [
-        {
-          id: '1',
-          data: new Date().toISOString(),
-          cliente: 'Maria Silva',
-          produtos: ['Bolo de Chocolate', 'Brigadeiro'],
-          total: 45.50,
-          metodo: 'pix' as const
-        },
-        {
-          id: '2',
-          data: new Date(Date.now() - 86400000).toISOString(),
-          cliente: 'João Santos',
-          produtos: ['Torta de Morango'],
-          total: 78.00,
-          metodo: 'cartao' as const
-        },
-        {
-          id: '3',
-          data: new Date(Date.now() - 172800000).toISOString(),
-          cliente: 'Ana Costa',
-          produtos: ['Cupcake', 'Doce de Leite'],
-          total: 32.00,
-          metodo: 'dinheiro' as const
-        }
-      ]
-      setSales(salesData)
-
-      // Simular estatísticas diárias
-      const statsData = []
-      for (let i = parseInt(selectedPeriod) - 1; i >= 0; i--) {
-        const date = new Date(Date.now() - i * 86400000)
-        const dayStats = {
-          data: date.toISOString().split('T')[0],
-          vendas: Math.floor(Math.random() * 20) + 5,
-          faturamento: Math.random() * 500 + 100
-        }
-        statsData.push(dayStats)
+      setLoading(true)
+      const response = await fetch(`/api/vendas?periodo=${selectedPeriod}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSales(data.vendas || [])
+        setDailyStats(data.estatisticas || [])
+      } else {
+        console.error('Erro ao carregar vendas')
+        setSales([])
+        setDailyStats([])
       }
-      setDailyStats(statsData)
     } catch (error) {
       console.error('Erro ao carregar dados de vendas:', error)
+      setSales([])
+      setDailyStats([])
     } finally {
       setLoading(false)
     }
@@ -258,6 +233,9 @@ export default function VendasPage() {
                         Produtos
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Qtd
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Método
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -267,13 +245,18 @@ export default function VendasPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sales.map((sale) => (
-                      <tr key={sale.id}>
+                      <tr key={sale.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                            <span className="text-sm text-gray-900">
-                              {new Date(sale.data).toLocaleDateString()}
-                            </span>
+                            <div>
+                              <div className="text-sm text-gray-900">
+                                {new Date(sale.data).toLocaleDateString('pt-BR')}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(sale.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -284,16 +267,25 @@ export default function VendasPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            {sale.produtos.join(', ')}
+                            {sale.produtos.slice(0, 2).join(', ')}
+                            {sale.produtos.length > 2 && (
+                              <span className="text-gray-500"> +{sale.produtos.length - 2} mais</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentMethodColor(sale.metodo)}`}>
+                          <span className="text-sm text-gray-900">{sale.produtos.length}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' +
+                            (getPaymentMethodColor(sale.metodo))
+                          }>
                             {getPaymentMethodName(sale.metodo)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-bold text-gray-900">R$ {sale.total.toFixed(2)}</span>
+                          <span className="text-sm font-bold text-green-600">R$ {sale.total.toFixed(2)}</span>
                         </td>
                       </tr>
                     ))}
