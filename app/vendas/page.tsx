@@ -412,131 +412,165 @@ export default function VendasPage() {
       {/* Modal de Relatório Simplificado */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto w-full">
-            {/* Cabeçalho Simplificado */}
-            <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold">
-                  🍰 Relatório de Fechamento
-                </h2>
-                <p className="text-primary-200 text-sm">
-                  {viewType === 'daily' ? 'Período Total' : 
-                   viewType === 'closing' ? `Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
-                   viewType === 'weekly' ? 'Relatório Semanal' : 
-                   selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}
-                </p>
+          <div className="bg-white rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto w-full print:max-h-none print:overflow-visible print:shadow-none print:rounded-none print:max-w-none print:w-full">
+            {/* CSS para impressão */}
+            <style jsx global>{`
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .print-content, .print-content * {
+                  visibility: visible;
+                }
+                .print-content {
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                  width: 100% !important;
+                  height: auto !important;
+                  overflow: visible !important;
+                  page-break-inside: avoid;
+                }
+                .no-print {
+                  display: none !important;
+                }
+                .print-break-avoid {
+                  page-break-inside: avoid;
+                  break-inside: avoid;
+                }
+                .print-section {
+                  margin-bottom: 15px;
+                  page-break-inside: avoid;
+                }
+              }
+            `}</style>
+            
+            <div className="print-content">
+              {/* Cabeçalho Simplificado */}
+              <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center print:bg-gray-800 print:rounded-none print-section">
+                <div>
+                  <h2 className="text-xl font-bold">
+                    🍰 Relatório de Fechamento
+                  </h2>
+                  <p className="text-primary-200 text-sm print:text-gray-300">
+                    {viewType === 'daily' ? 'Período Total' : 
+                     viewType === 'closing' ? `Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
+                     viewType === 'weekly' ? 'Relatório Semanal' : 
+                     selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="text-white hover:text-primary-200 text-xl font-bold no-print"
+                >
+                  ×
+                </button>
               </div>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="text-white hover:text-primary-200 text-xl font-bold"
-              >
-                ×
-              </button>
-            </div>
 
-            {/* Resumo Principal */}
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
-                  <p className="text-green-600 text-sm font-medium">Faturamento</p>
-                  <p className="text-2xl font-bold text-green-700">R$ {totalRevenue.toFixed(2)}</p>
+              {/* Resumo Principal */}
+              <div className="p-6 print:p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 print-section print-break-avoid">
+                  <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200 print:border print:border-gray-300">
+                    <p className="text-green-600 text-sm font-medium print:text-gray-600">Faturamento</p>
+                    <p className="text-2xl font-bold text-green-700 print:text-gray-800">R$ {totalRevenue.toFixed(2)}</p>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200 print:border print:border-gray-300">
+                    <p className="text-blue-600 text-sm font-medium print:text-gray-600">Vendas</p>
+                    <p className="text-2xl font-bold text-blue-700 print:text-gray-800">{totalSales}</p>
+                  </div>
+                  
+                  <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200 print:border print:border-gray-300">
+                    <p className="text-purple-600 text-sm font-medium print:text-gray-600">Ticket Médio</p>
+                    <p className="text-2xl font-bold text-purple-700 print:text-gray-800">R$ {averageTicket.toFixed(2)}</p>
+                  </div>
                 </div>
-                
-                <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
-                  <p className="text-blue-600 text-sm font-medium">Vendas</p>
-                  <p className="text-2xl font-bold text-blue-700">{totalSales}</p>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
-                  <p className="text-purple-600 text-sm font-medium">Ticket Médio</p>
-                  <p className="text-2xl font-bold text-purple-700">R$ {averageTicket.toFixed(2)}</p>
-                </div>
-              </div>
 
-              {/* Lista de Vendas Simplificada */}
-              {sales.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">
-                    📋 Vendas do Período
-                  </h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {sales.map((sale, index) => (
-                      <div key={sale.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">#{String(index + 1).padStart(3, '0')}</span>
-                            <span className="font-medium text-gray-900">{sale.cliente}</span>
+                {/* Lista de Vendas Simplificada */}
+                {sales.length > 0 && (
+                  <div className="mb-6 print-section">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2 print-break-avoid">
+                      📋 Vendas do Período
+                    </h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto print:max-h-none print:overflow-visible">
+                      {sales.map((sale, index) => (
+                        <div key={sale.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center print:bg-transparent print:border-b print:border-gray-200 print:rounded-none print-break-avoid">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">#{String(index + 1).padStart(3, '0')}</span>
+                              <span className="font-medium text-gray-900">{sale.cliente}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {new Date(sale.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} • 
+                              {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • 
+                              {getPaymentMethodName(sale.metodo)}
+                            </p>
                           </div>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {new Date(sale.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} • 
-                            {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • 
-                            {getPaymentMethodName(sale.metodo)}
-                          </p>
+                          <div className="text-right">
+                            <span className="font-bold text-green-600 print:text-gray-800">R$ {sale.total.toFixed(2)}</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-bold text-green-600">R$ {sale.total.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Métodos de Pagamento */}
-              {sales.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">💳 Métodos de Pagamento</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(() => {
-                      const metodos = sales.reduce((acc, sale) => {
-                        // Usar o método de pagamento real da venda
-                        const metodoRaw = sale.metodo || 'dinheiro'
-                        const metodo = metodoRaw === 'dinheiro' ? 'Dinheiro' : 
-                                     metodoRaw === 'pix' ? 'PIX' : 
-                                     metodoRaw === 'cartao' ? 'Cartão' : 
-                                     metodoRaw === 'credito' ? 'Crédito' : 
-                                     String(metodoRaw).charAt(0).toUpperCase() + String(metodoRaw).slice(1)
+                {/* Métodos de Pagamento */}
+                {sales.length > 0 && (
+                  <div className="mb-6 print-section print-break-avoid">
+                    <h4 className="font-medium text-gray-900 mb-3">💳 Métodos de Pagamento</h4>
+                    <div className="grid grid-cols-2 gap-3 print:gap-2">
+                      {(() => {
+                        const metodos = sales.reduce((acc, sale) => {
+                          // Usar o método de pagamento real da venda
+                          const metodoRaw = sale.metodo || 'dinheiro'
+                          const metodo = metodoRaw === 'dinheiro' ? 'Dinheiro' : 
+                                       metodoRaw === 'pix' ? 'PIX' : 
+                                       metodoRaw === 'cartao' ? 'Cartão' : 
+                                       metodoRaw === 'credito' ? 'Crédito' : 
+                                       String(metodoRaw).charAt(0).toUpperCase() + String(metodoRaw).slice(1)
+                          
+                          if (!acc[metodo]) {
+                            acc[metodo] = { valor: 0, quantidade: 0 }
+                          }
+                          acc[metodo].valor += sale.total
+                          acc[metodo].quantidade += 1
+                          return acc
+                        }, {} as Record<string, {valor: number, quantidade: number}>)
                         
-                        if (!acc[metodo]) {
-                          acc[metodo] = { valor: 0, quantidade: 0 }
-                        }
-                        acc[metodo].valor += sale.total
-                        acc[metodo].quantidade += 1
-                        return acc
-                      }, {} as Record<string, {valor: number, quantidade: number}>)
-                      
-                      return Object.entries(metodos).map(([metodo, dados]) => (
-                        <div key={metodo} className="bg-gray-50 p-3 rounded text-center">
-                          <p className="text-xs text-gray-600 font-medium">{metodo}</p>
-                          <p className="font-semibold text-gray-900">R$ {dados.valor.toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">{dados.quantidade} {dados.quantidade === 1 ? 'venda' : 'vendas'}</p>
-                        </div>
-                      ))
-                    })()}
+                        return Object.entries(metodos).map(([metodo, dados]) => (
+                          <div key={metodo} className="bg-gray-50 p-3 rounded text-center print:bg-transparent print:border print:border-gray-300">
+                            <p className="text-xs text-gray-600 font-medium">{metodo}</p>
+                            <p className="font-semibold text-gray-900">R$ {dados.valor.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">{dados.quantidade} {dados.quantidade === 1 ? 'venda' : 'vendas'}</p>
+                          </div>
+                        ))
+                      })()}
+                    </div>
                   </div>
+                )}
+
+                {/* Rodapé */}
+                <div className="text-center text-gray-400 text-xs pt-4 border-t print:text-gray-600 print-section">
+                  Relatório gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
                 </div>
-              )}
-
-              {/* Rodapé */}
-              <div className="text-center text-gray-400 text-xs pt-4 border-t">
-                Relatório gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
               </div>
-            </div>
 
-            {/* Botões */}
-            <div className="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-between">
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm"
-              >
-                🖨️ Imprimir
-              </button>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
-              >
-                Fechar
-              </button>
+              {/* Botões */}
+              <div className="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-between no-print">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm"
+                >
+                  🖨️ Imprimir
+                </button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
           </div>
         </div>
