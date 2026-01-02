@@ -7,6 +7,18 @@ export async function POST() {
   try {
     console.log('API Fix: Iniciando correção dos pedidos...')
     
+    // Verificar conexão com banco
+    try {
+      await prisma.$connect()
+      console.log('API Fix: Conexão com banco estabelecida')
+    } catch (dbError) {
+      console.error('API Fix: Erro de conexão com banco:', dbError)
+      return NextResponse.json({
+        error: 'Erro de conexão com banco de dados',
+        details: dbError instanceof Error ? dbError.message : 'Conexão falhou'
+      }, { status: 500 })
+    }
+    
     // Buscar todos os pedidos
     const allOrders = await prisma.order.findMany()
     console.log(`API Fix: ${allOrders.length} pedidos encontrados`)
@@ -69,5 +81,7 @@ export async function POST() {
       { error: 'Erro ao corrigir pedidos', details: errorMessage },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

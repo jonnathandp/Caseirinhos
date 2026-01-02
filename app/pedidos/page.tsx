@@ -21,7 +21,8 @@ import {
   EyeOff,
   ChevronDown,
   ChevronUp,
-  RefreshCw
+  RefreshCw,
+  Database
 } from 'lucide-react'
 
 interface Order {
@@ -64,6 +65,29 @@ export default function PedidosPage() {
     setExpandedOrders(newExpanded)
   }
 
+  const testDatabaseConnection = async () => {
+    try {
+      setLoading(true)
+      console.log('Testando conexão com banco de dados...')
+      
+      const response = await fetch('/api/health/db')
+      const result = await response.json()
+      
+      if (response.ok) {
+        alert(`✅ Banco de dados conectado!\n\nStatus: ${result.status}\nTabelas: ${result.tables?.length || 0}\nPedidos: ${result.counts?.orders || 0}\nItens: ${result.counts?.orderItems || 0}`)
+      } else {
+        alert(`❌ Problema na conexão:\n\n${result.error}`)
+      }
+      
+      console.log('Resultado do teste:', result)
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error)
+      alert(`❌ Erro ao testar conexão:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const updateDatabaseOrders = async () => {
     try {
       setLoading(true)
@@ -83,14 +107,16 @@ export default function PedidosPage() {
         // Recarregar pedidos após atualização
         await loadOrders()
         
-        alert('Pedidos atualizados com sucesso! ✅')
+        alert(`Pedidos atualizados com sucesso! ✅\n${result.message}\nTotal: ${result.totalOrders} pedidos\nAtualizados: ${result.updated} pedidos`)
       } else {
-        console.error('Erro ao atualizar pedidos')
-        alert('Erro ao atualizar pedidos ❌')
+        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }))
+        console.error('Erro ao atualizar pedidos:', response.status, errorData)
+        alert(`Erro ao atualizar pedidos ❌\nStatus: ${response.status}\nDetalhes: ${errorData.details || errorData.error}`)
       }
     } catch (error) {
       console.error('Erro ao atualizar pedidos:', error)
-      alert('Erro ao atualizar pedidos ❌')
+      const errorMessage = error instanceof Error ? error.message : 'Erro de conexão'
+      alert(`Erro ao atualizar pedidos ❌\nDetalhes: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
@@ -345,6 +371,14 @@ export default function PedidosPage() {
                   <Store className="h-4 w-4" />
                   <span className="hidden sm:inline">Loja</span>
                 </a>
+                <button
+                  onClick={testDatabaseConnection}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={loading}
+                >
+                  <Database className="h-4 w-4" />
+                  <span className="hidden sm:inline">Testar DB</span>
+                </button>
                 <button
                   onClick={updateDatabaseOrders}
                   className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
