@@ -18,7 +18,7 @@ import {
   QrCode,
   ArrowLeft
 } from 'lucide-react'
-import NotificationManager from '../src/components/NotificationManager'
+import NotificationManager from '../../src/components/NotificationManager'
 
 interface Product {
   id: string
