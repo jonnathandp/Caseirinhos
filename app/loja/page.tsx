@@ -18,6 +18,7 @@ import {
   QrCode,
   ArrowLeft
 } from 'lucide-react'
+import NotificationManager from '../src/components/NotificationManager'
 
 interface Product {
   id: string
@@ -62,6 +63,8 @@ export default function LojaPage() {
   const [showCart, setShowCart] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
   const [customerData, setCustomerData] = useState<CustomerData>({
     nome: '',
@@ -103,14 +106,9 @@ export default function LojaPage() {
     }
   ]
 
-  useEffect(() => {
-    loadProducts()
-    loadCartFromStorage()
-  }, [])
-
-  useEffect(() => {
-    saveCartToStorage()
-  }, [cart])
+  const saveCartToStorage = () => {
+    localStorage.setItem('caseirinhos_cart', JSON.stringify(cart))
+  }
 
   const loadProducts = async () => {
     try {
@@ -133,9 +131,16 @@ export default function LojaPage() {
     }
   }
 
-  const saveCartToStorage = () => {
-    localStorage.setItem('caseirinhos_cart', JSON.stringify(cart))
-  }
+  useEffect(() => {
+    loadProducts()
+    loadCartFromStorage()
+  }, [])
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      saveCartToStorage()
+    }
+  }, [cart])
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.product.id === product.id)
@@ -243,11 +248,27 @@ export default function LojaPage() {
       })
 
       if (response.ok) {
-        alert(`Pedido realizado com sucesso!\nForma de pagamento: ${selectedPaymentMethod.name}\nEm breve entraremos em contato.`)
+        const pedidoData = await response.json()
+        setOrderNumber(pedidoData.numero || '001')
         clearCart()
         setShowCheckout(false)
         setShowPayment(false)
         setSelectedPaymentMethod(null)
+        setShowSuccessModal(true)
+        
+        // Solicitar permissão para notificações
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission()
+        }
+        
+        // Mostrar notificação do navegador se permitido
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Pedido realizado com sucesso! 🎉', {
+            body: `Seu pedido #${pedidoData.numero || '001'} foi enviado. Acompanhe o status pelo link enviado.`,
+            icon: '/favicon.ico'
+          })
+        }
+        
         setCustomerData({
           nome: '',
           telefone: '',
@@ -731,6 +752,83 @@ export default function LojaPage() {
           </div>
         </div>
       )}
+
+      {/* Success Modal */}
+      {showSuccessModal && orderNumber && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border w-full max-w-md shadow-lg rounded-lg bg-white">
+            <div className="text-center">
+              {/* Ícone de sucesso */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Pedido Realizado com Sucesso! 🎉</h3>
+              
+              <div className="bg-primary-50 rounded-lg p-4 mb-4">
+                <p className="text-primary-800 font-semibold text-lg">Pedido #{orderNumber}</p>
+                <p className="text-primary-600 text-sm mt-1">Total: R$ {getTotalPrice().toFixed(2)}</p>
+                <p className="text-primary-600 text-sm">Pagamento: {selectedPaymentMethod?.name}</p>
+              </div>
+              
+              <div className="text-gray-600 text-sm mb-6 space-y-2">
+                <p>✅ Seu pedido foi enviado com sucesso!</p>
+                <p>📱 Em breve entraremos em contato</p>
+                <p>👀 Acompanhe o status do seu pedido:</p>
+              </div>
+              
+              {/* Link de acompanhamento */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-6">
+                <p className="text-xs text-gray-500 mb-2">Link de Acompanhamento:</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/acompanhar/${orderNumber}`}
+                    className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-1 text-gray-600"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/acompanhar/${orderNumber}`)
+                      alert('Link copiado! 📋')
+                    }}
+                    className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    window.open(`/acompanhar/${orderNumber}`, '_blank')
+                  }}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Acompanhar Pedido
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false)
+                    setOrderNumber(null)
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+                >
+                  Fechar
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-4">💡 Salve este link para acompanhar seu pedido!</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Manager */}
+      <NotificationManager />
     </div>
   )
 }

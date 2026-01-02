@@ -267,7 +267,7 @@ export default function PedidosPage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {status === 'TODOS' ? 'Todos' : getOrderStatusText(status)}
+                    {status === 'TODOS' ? 'Todos' : getOrderStatusText(status as Order['status'])}
                   </button>
                 ))}
               </div>
@@ -298,7 +298,7 @@ export default function PedidosPage() {
               <p className="text-gray-600">
                 {filter === 'TODOS' 
                   ? 'Ainda não há pedidos cadastrados no sistema'
-                  : `Não há pedidos com status ${getOrderStatusText(filter)}`
+                  : `Não há pedidos com status ${filter === 'TODOS' ? 'Todos' : getOrderStatusText(filter as Order['status'])}`
                 }
               </p>
             </div>

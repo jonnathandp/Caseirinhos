@@ -1,0 +1,17 @@
+{
+  "name": "Caseirinhos Delicious",
+  "short_name": "Caseirinhos",
+  "description": "Doces artesanais e queijos especiais",
+  "start_url": "/loja",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "permissions": ["notifications"]
+}
