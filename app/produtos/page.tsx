@@ -138,7 +138,6 @@ export default function ProdutosPage() {
     <AppLayout>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Cabeçalho */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div className="flex items-center mb-4 sm:mb-0">
               <ShoppingBag className="h-8 w-8 text-primary-600 mr-3" />
@@ -160,7 +159,6 @@ export default function ProdutosPage() {
             </button>
           </div>
 
-          {/* Barra de Pesquisa */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="space-y-4">
               <div className="relative">
@@ -176,7 +174,7 @@ export default function ProdutosPage() {
             </div>
           </div>
 
-          {/* Modal do Formulário */}
+          {showForm && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
               <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div className="mt-3">
@@ -275,7 +273,6 @@ export default function ProdutosPage() {
             </div>
           )}
 
-          {/* Lista de Produtos */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
