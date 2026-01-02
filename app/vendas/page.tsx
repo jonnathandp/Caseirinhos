@@ -470,7 +470,7 @@ export default function VendasPage() {
                           <p className="text-xs text-gray-600 mt-1">
                             {new Date(sale.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} • 
                             {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • 
-                            {sale.metodo === 'dinheiro' ? 'Dinheiro' : sale.metodo === 'pix' ? 'PIX' : sale.metodo === 'cartao' ? 'Cartão' : 'Crédito'}
+                            {getPaymentMethodName(sale.metodo)}
                           </p>
                         </div>
                         <div className="text-right">

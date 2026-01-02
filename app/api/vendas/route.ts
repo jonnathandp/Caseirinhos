@@ -92,6 +92,24 @@ export async function GET(request: NextRequest) {
         pedidoExistente.produtos.push(venda.produtoNome)
         pedidoExistente.total = parseFloat(pedidoExistente.total) + parseFloat(venda.subtotal.toString())
       } else {
+        // Corrigir acesso ao método de pagamento
+        let metodoRaw = venda.order.formaPagamento || 'dinheiro'
+        // Normalizar para os valores esperados
+        if (metodoRaw.toLowerCase().includes('dinheiro')) {
+          metodoRaw = 'dinheiro'
+        } else if (metodoRaw.toLowerCase().includes('pix')) {
+          metodoRaw = 'pix'  
+        } else if (metodoRaw.toLowerCase().includes('cartao') || metodoRaw.toLowerCase().includes('cartão')) {
+          metodoRaw = 'cartao'
+        } else if (metodoRaw.toLowerCase().includes('credito') || metodoRaw.toLowerCase().includes('crédito')) {
+          metodoRaw = 'credito'
+        } else {
+          // Se for outro valor, manter o original em lowercase
+          metodoRaw = metodoRaw.toLowerCase()
+        }
+
+        console.log(`Pedido ${venda.orderId}: formaPagamento = "${venda.order.formaPagamento}" -> metodo = "${metodoRaw}"`)
+
         acc.push({
           id: venda.orderId,
           data: venda.dataVenda.toISOString(),
@@ -99,7 +117,7 @@ export async function GET(request: NextRequest) {
           clienteId: venda.order.clienteId,
           produtos: [venda.produtoNome],
           total: parseFloat(venda.subtotal.toString()),
-          metodo: venda.order.formaPagamento || 'dinheiro',
+          metodo: metodoRaw,
           status: venda.order.status
         })
       }
