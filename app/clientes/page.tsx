@@ -33,6 +33,16 @@ export default function ClientesPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    endereco: '',
+    dataNascimento: '',
+    observacoes: ''
+  })
 
   useEffect(() => {
     if (status === 'loading') return
@@ -90,6 +100,103 @@ export default function ClientesPage() {
     }
   }
 
+  const openModal = (customer?: Customer) => {
+    if (customer) {
+      setEditingCustomer(customer)
+      setFormData({
+        nome: customer.nome,
+        email: customer.email || '',
+        telefone: customer.telefone || '',
+        endereco: customer.endereco || '',
+        dataNascimento: customer.dataNascimento ? customer.dataNascimento.split('T')[0] : '',
+        observacoes: customer.observacoes || ''
+      })
+    } else {
+      setEditingCustomer(null)
+      setFormData({
+        nome: '',
+        email: '',
+        telefone: '',
+        endereco: '',
+        dataNascimento: '',
+        observacoes: ''
+      })
+    }
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setEditingCustomer(null)
+    setFormData({
+      nome: '',
+      email: '',
+      telefone: '',
+      endereco: '',
+      dataNascimento: '',
+      observacoes: ''
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.nome.trim()) {
+      alert('Nome é obrigatório')
+      return
+    }
+
+    try {
+      const method = editingCustomer ? 'PUT' : 'POST'
+      const body = editingCustomer 
+        ? { ...formData, id: editingCustomer.id }
+        : formData
+
+      const response = await fetch('/api/clientes', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      if (response.ok) {
+        closeModal()
+        loadCustomers()
+        alert(editingCustomer ? 'Cliente atualizado com sucesso!' : 'Cliente criado com sucesso!')
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Erro ao salvar cliente')
+      }
+    } catch (error) {
+      console.error('Erro ao salvar cliente:', error)
+      alert('Erro ao salvar cliente')
+    }
+  }
+
+  const handleDelete = async (id: string, nome: string) => {
+    if (!confirm(`Tem certeza que deseja remover o cliente ${nome}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/clientes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+
+      if (response.ok) {
+        loadCustomers()
+        alert('Cliente removido com sucesso!')
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Erro ao remover cliente')
+      }
+    } catch (error) {
+      console.error('Erro ao remover cliente:', error)
+      alert('Erro ao remover cliente')
+    }
+  }
+
   const filteredCustomers = customers.filter(customer =>
     customer.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,7 +228,10 @@ export default function ClientesPage() {
               </div>
             </div>
             
-            <button className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors">
+            <button 
+              onClick={() => openModal()}
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors"
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Novo Cliente
             </button>
@@ -173,10 +283,18 @@ export default function ClientesPage() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors">
+                      <button 
+                        onClick={() => openModal(customer)}
+                        className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+                        title="Editar cliente"
+                      >
                         <Edit2 className="h-4 w-4" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                      <button 
+                        onClick={() => handleDelete(customer.id, customer.nome)}
+                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        title="Remover cliente"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -225,6 +343,121 @@ export default function ClientesPage() {
           )}
         </div>
       </div>
-    </AppLayout>
+      {/* Modal do Formulário */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                >
+                  <span className="text-xl">×</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nome}
+                      onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.telefone}
+                      onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Data de Nascimento
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dataNascimento}
+                      onChange={(e) => setFormData({...formData, dataNascimento: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Endereço
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.endereco}
+                    onChange={(e) => setFormData({...formData, endereco: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Rua, número - Bairro, Cidade, Estado"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observações
+                  </label>
+                  <textarea
+                    value={formData.observacoes}
+                    onChange={(e) => setFormData({...formData, observacoes: e.target.value})}
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Informações adicionais sobre o cliente..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                  >
+                    {editingCustomer ? 'Atualizar' : 'Criar'} Cliente
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}    </AppLayout>
   )
 }
