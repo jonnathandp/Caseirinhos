@@ -174,37 +174,6 @@ export default function ClientesPage() {
     })
   }
 
-  const syncCustomerSchema = async () => {
-    try {
-      setLoading(true)
-      console.log('Sincronizando schema de clientes...')
-      
-      const response = await fetch('/api/schema/customers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok && result.success) {
-        alert(`✅ Schema sincronizado!\n\n${result.operations.join('\n')}`)
-        // Recarregar clientes após sincronização
-        await loadCustomers()
-      } else {
-        alert(`❌ Erro na sincronização:\n\n${result.details || result.error}`)
-      }
-      
-      console.log('Resultado da sincronização:', result)
-    } catch (error) {
-      console.error('Erro ao sincronizar schema:', error)
-      alert(`❌ Erro ao sincronizar:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
