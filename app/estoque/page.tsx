@@ -32,6 +32,9 @@ export default function EstoquePage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showLowStock, setShowLowStock] = useState(false)
+  const [editingItem, setEditingItem] = useState<StockItem | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editQuantityMin, setEditQuantityMin] = useState(0)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -48,37 +51,25 @@ export default function EstoquePage() {
 
   const loadStockData = async () => {
     try {
-      // Simular dados de estoque
-      const stockData = [
-        {
-          id: '1',
-          produtoId: '1',
-          produto: { nome: 'Bolo de Chocolate', categoria: 'Bolos' },
-          quantidade: 15,
-          quantidadeMinima: 10,
-          unidade: 'unidade',
-          ultimaMovimentacao: new Date().toISOString()
-        },
-        {
-          id: '2',
-          produtoId: '2',
-          produto: { nome: 'Brigadeiro Gourmet', categoria: 'Doces' },
-          quantidade: 3,
-          quantidadeMinima: 20,
-          unidade: 'unidade',
-          ultimaMovimentacao: new Date().toISOString()
-        },
-        {
-          id: '3',
-          produtoId: '3',
-          produto: { nome: 'Torta de Morango', categoria: 'Tortas' },
-          quantidade: 25,
-          quantidadeMinima: 5,
-          unidade: 'unidade',
-          ultimaMovimentacao: new Date().toISOString()
-        }
-      ]
-      setStockItems(stockData)
+      const response = await fetch('/api/estoque')
+      if (response.ok) {
+        const stockData = await response.json()
+        setStockItems(stockData)
+      } else {
+        console.error('Erro ao carregar estoque:', response.statusText)
+        // Fallback com dados de exemplo em caso de erro
+        setStockItems([
+          {
+            id: '1',
+            produtoId: '1',
+            produto: { nome: 'Bolo de Chocolate', categoria: 'Bolos' },
+            quantidade: 15,
+            quantidadeMinima: 10,
+            unidade: 'unidade',
+            ultimaMovimentacao: new Date().toISOString()
+          }
+        ])
+      }
     } catch (error) {
       console.error('Erro ao carregar estoque:', error)
     } finally {
@@ -86,18 +77,103 @@ export default function EstoquePage() {
     }
   }
 
-  const handleStockAdjustment = (itemId: string, adjustment: number) => {
-    setStockItems(items =>
-      items.map(item =>
-        item.id === itemId
-          ? {
-              ...item,
-              quantidade: Math.max(0, item.quantidade + adjustment),
-              ultimaMovimentacao: new Date().toISOString()
-            }
-          : item
-      )
-    )
+  const handleStockAdjustment = async (itemId: string, adjustment: number) => {
+    try {
+      const currentItem = stockItems.find(item => item.id === itemId)
+      if (!currentItem) return
+      
+      const newQuantity = Math.max(0, currentItem.quantidade + adjustment)
+      const motivo = adjustment > 0 ? 'Entrada manual' : 'Saída manual'
+      
+      const response = await fetch('/api/estoque', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stockId: itemId,
+          quantidade: newQuantity,
+          motivo
+        })
+      })
+      
+      if (response.ok) {
+        const { stock } = await response.json()
+        setStockItems(items =>
+          items.map(item => item.id === itemId ? stock : item)
+        )
+      } else {
+        alert('Erro ao atualizar estoque')
+      }
+    } catch (error) {
+      console.error('Erro ao ajustar estoque:', error)
+      alert('Erro ao atualizar estoque')
+    }
+  }
+
+  const syncProducts = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/estoque/sync', {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.syncedProducts > 0) {
+          alert(`✅ ${result.syncedProducts} produtos foram sincronizados com o estoque!`)
+        } else {
+          alert('✅ Todos os produtos já estão sincronizados.')
+        }
+        // Recarregar dados após sincronização
+        await loadStockData()
+      } else {
+        alert('❌ Erro ao sincronizar produtos')
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error)
+      alert('❌ Erro ao sincronizar produtos')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openEditModal = (item: StockItem) => {
+    setEditingItem(item)
+    setEditQuantityMin(item.quantidadeMinima)
+    setShowEditModal(true)
+  }
+
+  const closeEditModal = () => {
+    setEditingItem(null)
+    setShowEditModal(false)
+    setEditQuantityMin(0)
+  }
+
+  const handleUpdateMinStock = async () => {
+    if (!editingItem) return
+    
+    try {
+      const response = await fetch('/api/estoque', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stockId: editingItem.id,
+          quantidadeMinima: editQuantityMin
+        })
+      })
+      
+      if (response.ok) {
+        const { stock } = await response.json()
+        setStockItems(items =>
+          items.map(item => item.id === editingItem.id ? stock : item)
+        )
+        closeEditModal()
+      } else {
+        alert('Erro ao atualizar estoque mínimo')
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar estoque mínimo:', error)
+      alert('Erro ao atualizar estoque mínimo')
+    }
   }
 
   const filteredItems = stockItems.filter(item => {
@@ -134,12 +210,23 @@ export default function EstoquePage() {
                 <p className="text-gray-600">Controle de inventário e movimentações</p>
               </div>
             </div>
-            {lowStockCount > 0 && (
-              <div className="flex items-center px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                <span className="text-sm">{lowStockCount} itens com estoque baixo</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {lowStockCount > 0 && (
+                <div className="flex items-center px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <span className="text-sm">{lowStockCount} itens com estoque baixo</span>
+                </div>
+              )}
+              <button
+                onClick={syncProducts}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+                disabled={loading}
+                title="Sincronizar produtos com estoque"
+              >
+                <TrendingUp className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Sincronizar
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -228,6 +315,13 @@ export default function EstoquePage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
                               {item.quantidadeMinima} {item.unidade}
+                              <button
+                                onClick={() => openEditModal(item)}
+                                className="ml-2 p-1 text-gray-400 hover:text-gray-600"
+                                title="Editar estoque mínimo"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </button>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -270,6 +364,65 @@ export default function EstoquePage() {
           )}
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      {showEditModal && editingItem && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={closeEditModal}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                      Editar Estoque Mínimo
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Produto: {editingItem.produto.nome}
+                        </label>
+                        <p className="text-sm text-gray-500">
+                          Estoque atual: {editingItem.quantidade} {editingItem.unidade}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Estoque Mínimo
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editQuantityMin}
+                          onChange={(e) => setEditQuantityMin(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleUpdateMinStock}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Salvar
+                </button>
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }
