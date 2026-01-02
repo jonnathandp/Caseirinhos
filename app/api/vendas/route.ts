@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+interface Estatistica {
+  data: string
+  vendas: number
+  faturamento: number
+  periodo?: string
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -61,7 +68,7 @@ export async function GET(request: NextRequest) {
     }, [])
 
     // Calcular estatísticas baseadas no tipo de visualização
-    let estatisticas = []
+    let estatisticas: Estatistica[] = []
     
     if (tipo === 'daily') {
       // Estatísticas diárias (código existente)

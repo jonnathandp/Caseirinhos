@@ -76,7 +76,7 @@ export default function PedidosPage() {
     if (session) {
       loadOrders()
     }
-  }, [session, selectedPeriod])
+  }, [session, selectedPeriod]) // Removendo loadOrders da dependência para evitar loop
 
   const loadOrders = async () => {
     try {
