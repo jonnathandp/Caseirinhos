@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get('periodo') || '7' // dias
+    const tipo = searchParams.get('tipo') || 'daily' // daily, weekly, monthly
 
     const dataInicio = new Date()
     dataInicio.setDate(dataInicio.getDate() - parseInt(periodo))
@@ -59,47 +60,100 @@ export async function GET(request: NextRequest) {
       return acc
     }, [])
 
-    // Calcular estatísticas diárias
-    const estatisticasDiarias = await prisma.$queryRaw`
-      SELECT 
-        DATE(data_venda) as data,
-        COUNT(DISTINCT order_id) as vendas,
-        SUM(subtotal) as faturamento
-      FROM sales
-      WHERE data_venda >= ${dataInicio}
-      GROUP BY DATE(data_venda)
-      ORDER BY DATE(data_venda) ASC
-    ` as any[]
+    // Calcular estatísticas baseadas no tipo de visualização
+    let estatisticas = []
+    
+    if (tipo === 'daily') {
+      // Estatísticas diárias (código existente)
+      const estatisticasDiarias = await prisma.$queryRaw`
+        SELECT 
+          DATE(data_venda) as data,
+          COUNT(DISTINCT order_id) as vendas,
+          SUM(subtotal) as faturamento
+        FROM sales
+        WHERE data_venda >= ${dataInicio}
+        GROUP BY DATE(data_venda)
+        ORDER BY DATE(data_venda) ASC
+      ` as any[]
 
-    // Formatar estatísticas
-    const stats = estatisticasDiarias.map((stat: any) => ({
-      data: stat.data,
-      vendas: parseInt(stat.vendas),
-      faturamento: parseFloat(stat.faturamento)
-    }))
+      const stats = estatisticasDiarias.map((stat: any) => ({
+        data: stat.data,
+        vendas: parseInt(stat.vendas),
+        faturamento: parseFloat(stat.faturamento)
+      }))
 
-    // Preencher dias sem vendas
-    const diasCompletos = []
-    for (let i = parseInt(periodo) - 1; i >= 0; i--) {
-      const data = new Date()
-      data.setDate(data.getDate() - i)
-      const dataStr = data.toISOString().split('T')[0]
-      
-      const estatistica = stats.find(s => {
-        const sData = new Date(s.data).toISOString().split('T')[0]
-        return sData === dataStr
-      })
-      
-      diasCompletos.push({
-        data: dataStr,
-        vendas: estatistica?.vendas || 0,
-        faturamento: estatistica?.faturamento || 0
+      // Preencher dias sem vendas
+      for (let i = parseInt(periodo) - 1; i >= 0; i--) {
+        const data = new Date()
+        data.setDate(data.getDate() - i)
+        const dataStr = data.toISOString().split('T')[0]
+        
+        const estatistica = stats.find(s => {
+          const sData = new Date(s.data).toISOString().split('T')[0]
+          return sData === dataStr
+        })
+        
+        estatisticas.push({
+          data: dataStr,
+          vendas: estatistica?.vendas || 0,
+          faturamento: estatistica?.faturamento || 0
+        })
+      }
+    } else if (tipo === 'weekly') {
+      // Estatísticas semanais
+      const estatisticasSemanais = await prisma.$queryRaw`
+        SELECT 
+          YEAR(data_venda) as ano,
+          WEEK(data_venda, 1) as semana,
+          COUNT(DISTINCT order_id) as vendas,
+          SUM(subtotal) as faturamento,
+          MIN(DATE(data_venda)) as inicio_semana,
+          MAX(DATE(data_venda)) as fim_semana
+        FROM sales
+        WHERE data_venda >= ${dataInicio}
+        GROUP BY YEAR(data_venda), WEEK(data_venda, 1)
+        ORDER BY ano ASC, semana ASC
+      ` as any[]
+
+      estatisticas = estatisticasSemanais.map((stat: any) => ({
+        data: `${stat.inicio_semana} - ${stat.fim_semana}`,
+        vendas: parseInt(stat.vendas),
+        faturamento: parseFloat(stat.faturamento),
+        periodo: `Semana ${stat.semana}/${stat.ano}`
+      }))
+    } else if (tipo === 'monthly') {
+      // Estatísticas mensais
+      const estatisticasMensais = await prisma.$queryRaw`
+        SELECT 
+          YEAR(data_venda) as ano,
+          MONTH(data_venda) as mes,
+          COUNT(DISTINCT order_id) as vendas,
+          SUM(subtotal) as faturamento
+        FROM sales
+        WHERE data_venda >= ${dataInicio}
+        GROUP BY YEAR(data_venda), MONTH(data_venda)
+        ORDER BY ano ASC, mes ASC
+      ` as any[]
+
+      estatisticas = estatisticasMensais.map((stat: any) => {
+        const nomesMeses = [
+          'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+          'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+        ]
+        return {
+          data: `${nomesMeses[stat.mes - 1]}/${stat.ano}`,
+          vendas: parseInt(stat.vendas),
+          faturamento: parseFloat(stat.faturamento),
+          periodo: `${nomesMeses[stat.mes - 1]}/${stat.ano}`
+        }
       })
     }
 
     return NextResponse.json({
       vendas: vendasPorPedido,
-      estatisticas: diasCompletos,
+      estatisticas: estatisticas,
+      periodo: parseInt(periodo),
+      tipo: tipo,
       resumo: {
         totalVendas: vendasPorPedido.length,
         faturamentoTotal: vendasPorPedido.reduce((sum, v) => sum + v.total, 0),
