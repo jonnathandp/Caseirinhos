@@ -95,36 +95,6 @@ export default function PedidosPage() {
       setLoading(false)
     }
   }
-    try {
-      setLoading(true)
-      console.log('Atualizando pedidos no banco de dados...')
-      
-      const response = await fetch('/api/pedidos/fix', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Resultado da atualização:', result)
-        
-        // Recarregar pedidos após atualização
-        await loadOrders()
-        
-        alert('Pedidos atualizados com sucesso! ✅')
-      } else {
-        console.error('Erro ao atualizar pedidos')
-        alert('Erro ao atualizar pedidos ❌')
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar pedidos:', error)
-      alert('Erro ao atualizar pedidos ❌')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useEffect(() => {
     if (status === 'loading') return
