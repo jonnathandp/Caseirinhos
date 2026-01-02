@@ -14,7 +14,8 @@ import {
   Filter, 
   UserPlus,
   Edit2,
-  Trash2 
+  Trash2,
+  RefreshCw
 } from 'lucide-react'
 
 interface Customer {
@@ -59,42 +60,51 @@ export default function ClientesPage() {
 
   const loadCustomers = async () => {
     try {
+      console.log('Carregando clientes da API...')
       // Buscar dados reais da API
       const response = await fetch('/api/clientes')
+      
       if (response.ok) {
         const customersData = await response.json()
+        console.log('Clientes carregados da API:', customersData.length)
         setCustomers(customersData)
       } else {
-        console.error('Erro ao carregar clientes:', response.status)
-        // Fallback para dados mockados apenas se a API falhar
-        const fallbackData = [
-          {
-            id: '1',
-            nome: 'Maria Silva',
-            email: 'maria@email.com',
-            telefone: '(11) 99999-1111',
-            endereco: 'Rua das Flores, 123 - São Paulo, SP',
-            dataNascimento: '1985-03-15',
-            observacoes: 'Cliente preferencial',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            nome: 'João Santos',
-            email: 'joao@email.com',
-            telefone: '(11) 99999-2222',
-            endereco: 'Av. Principal, 456 - São Paulo, SP',
-            dataNascimento: '1990-07-22',
-            observacoes: '',
-            createdAt: new Date().toISOString()
-          }
-        ]
-        setCustomers(fallbackData)
+        console.error('Erro ao carregar clientes - Status:', response.status)
+        const errorText = await response.text()
+        console.error('Detalhes do erro:', errorText)
+        
+        // Em caso de erro, mostrar mensagem mas não usar fallback
+        alert(`Erro ao carregar clientes: ${response.status}\nDetalhes: ${errorText}`)
+        setCustomers([])
       }
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error)
-      // Fallback em caso de erro de rede
-      setCustomers([])
+      console.error('Erro de rede ao carregar clientes:', error)
+      
+      // Só usar fallback se houver erro de conexão
+      console.log('Usando dados de fallback devido a erro de rede')
+      const fallbackData = [
+        {
+          id: '1',
+          nome: 'Maria Silva',
+          email: 'maria@email.com',
+          telefone: '(11) 99999-1111',
+          endereco: 'Rua das Flores, 123 - São Paulo, SP',
+          dataNascimento: '1985-03-15',
+          observacoes: 'Cliente preferencial',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '2',
+          nome: 'João Santos',
+          email: 'joao@email.com',
+          telefone: '(11) 99999-2222',
+          endereco: 'Av. Principal, 456 - São Paulo, SP',
+          dataNascimento: '1990-07-22',
+          observacoes: '',
+          createdAt: new Date().toISOString()
+        }
+      ]
+      setCustomers(fallbackData)
     } finally {
       setLoading(false)
     }
@@ -228,13 +238,24 @@ export default function ClientesPage() {
               </div>
             </div>
             
-            <button 
-              onClick={() => openModal()}
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Novo Cliente
-            </button>
+            
+            <div className="flex gap-2">
+              <button 
+                onClick={loadCustomers}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Recarregar
+              </button>
+              <button 
+                onClick={() => openModal()}
+                className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 transition-colors"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Novo Cliente
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

@@ -5,14 +5,38 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    console.log('API Clientes: Iniciando busca de clientes...')
+    
+    // Verificar conexão com banco
+    await prisma.$connect()
+    console.log('API Clientes: Conectado ao banco')
+    
     const clientes = await prisma.customer.findMany({
       orderBy: { nome: 'asc' }
     })
 
+    console.log(`API Clientes: ${clientes.length} clientes encontrados`)
+    
+    // Log dos primeiros clientes para debug
+    if (clientes.length > 0) {
+      console.log('Primeiro cliente:', {
+        id: clientes[0].id,
+        nome: clientes[0].nome,
+        email: clientes[0].email,
+        telefone: clientes[0].telefone
+      })
+    }
+
     return NextResponse.json(clientes)
   } catch (error) {
     console.error('Erro ao buscar clientes:', error)
-    return NextResponse.json({ error: 'Erro ao carregar clientes' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    return NextResponse.json({ 
+      error: 'Erro ao carregar clientes', 
+      details: errorMessage 
+    }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
