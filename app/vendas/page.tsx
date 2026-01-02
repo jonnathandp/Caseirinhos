@@ -82,23 +82,6 @@ export default function VendasPage() {
     }
   }
 
-  const handleSeedVendas = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/seed-vendas', { method: 'POST' })
-      if (response.ok) {
-        const result = await response.json()
-        alert(`✅ ${result.message}`)
-        loadSalesData()
-      } else {
-        alert('❌ Erro ao criar vendas de exemplo')
-      }
-    } catch (error) {
-      console.error('Erro ao criar vendas:', error)
-      alert('❌ Erro ao conectar com o servidor')
-    }
-  }
-
   const totalSales = sales.length
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0)
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0
@@ -332,14 +315,6 @@ export default function VendasPage() {
               <Calendar className="h-4 w-4" />
               Relatório de Fechamento
             </button>
-            
-            <button
-              onClick={handleSeedVendas}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              Gerar Vendas Exemplo
-            </button>
           </div>
 
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -514,17 +489,27 @@ export default function VendasPage() {
                   <div className="grid grid-cols-2 gap-3">
                     {(() => {
                       const metodos = sales.reduce((acc, sale) => {
-                        const metodo = sale.metodo === 'dinheiro' ? 'Dinheiro' : 
-                                     sale.metodo === 'pix' ? 'PIX' : 
-                                     sale.metodo === 'cartao' ? 'Cartão' : 'Crédito'
-                        acc[metodo] = (acc[metodo] || 0) + sale.total
+                        // Usar o método de pagamento real da venda
+                        const metodoRaw = sale.metodo || 'dinheiro'
+                        const metodo = metodoRaw === 'dinheiro' ? 'Dinheiro' : 
+                                     metodoRaw === 'pix' ? 'PIX' : 
+                                     metodoRaw === 'cartao' ? 'Cartão' : 
+                                     metodoRaw === 'credito' ? 'Crédito' : 
+                                     String(metodoRaw).charAt(0).toUpperCase() + String(metodoRaw).slice(1)
+                        
+                        if (!acc[metodo]) {
+                          acc[metodo] = { valor: 0, quantidade: 0 }
+                        }
+                        acc[metodo].valor += sale.total
+                        acc[metodo].quantidade += 1
                         return acc
-                      }, {} as Record<string, number>)
+                      }, {} as Record<string, {valor: number, quantidade: number}>)
                       
-                      return Object.entries(metodos).map(([metodo, valor]) => (
-                        <div key={metodo} className="bg-gray-50 p-2 rounded text-center">
-                          <p className="text-xs text-gray-600">{metodo}</p>
-                          <p className="font-semibold text-gray-900">R$ {valor.toFixed(2)}</p>
+                      return Object.entries(metodos).map(([metodo, dados]) => (
+                        <div key={metodo} className="bg-gray-50 p-3 rounded text-center">
+                          <p className="text-xs text-gray-600 font-medium">{metodo}</p>
+                          <p className="font-semibold text-gray-900">R$ {dados.valor.toFixed(2)}</p>
+                          <p className="text-xs text-gray-500">{dados.quantidade} {dados.quantidade === 1 ? 'venda' : 'vendas'}</p>
                         </div>
                       ))
                     })()}
