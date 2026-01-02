@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { 
   CheckCircle, 
@@ -45,16 +45,7 @@ export default function AcompanharPedido() {
 
   const numero = params?.numero as string
 
-  useEffect(() => {
-    if (numero) {
-      loadOrderStatus()
-      // Auto-refresh a cada 30 segundos
-      const interval = setInterval(loadOrderStatus, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [numero])
-
-  const loadOrderStatus = async () => {
+  const loadOrderStatus = useCallback(async () => {
     try {
       setError('')
       const response = await fetch(`/api/acompanhar/${numero}`)
@@ -71,7 +62,16 @@ export default function AcompanharPedido() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [numero])
+
+  useEffect(() => {
+    if (numero) {
+      loadOrderStatus()
+      // Auto-refresh a cada 30 segundos
+      const interval = setInterval(loadOrderStatus, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [numero, loadOrderStatus])
 
   const getStatusInfo = (status: string) => {
     const statusMap = {

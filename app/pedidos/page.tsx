@@ -298,7 +298,7 @@ export default function PedidosPage() {
               <p className="text-gray-600">
                 {filter === 'TODOS' 
                   ? 'Ainda não há pedidos cadastrados no sistema'
-                  : `Não há pedidos com status ${filter === 'TODOS' ? 'Todos' : getOrderStatusText(filter as Order['status'])}`
+                  : `Não há pedidos com status ${getOrderStatusText(filter)}`
                 }
               </p>
             </div>

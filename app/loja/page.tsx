@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   ShoppingCart, 
   Plus, 
@@ -106,9 +106,9 @@ export default function LojaPage() {
     }
   ]
 
-  const saveCartToStorage = () => {
+  const saveCartToStorage = useCallback(() => {
     localStorage.setItem('caseirinhos_cart', JSON.stringify(cart))
-  }
+  }, [cart])
 
   const loadProducts = async () => {
     try {
@@ -140,7 +140,7 @@ export default function LojaPage() {
     if (cart.length > 0) {
       saveCartToStorage()
     }
-  }, [cart])
+  }, [cart, saveCartToStorage])
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.product.id === product.id)
