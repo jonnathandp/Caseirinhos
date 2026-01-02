@@ -20,7 +20,8 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  RefreshCw
 } from 'lucide-react'
 
 interface Order {
@@ -82,6 +83,7 @@ export default function PedidosPage() {
       const response = await fetch('/api/pedidos')
       
       if (!response.ok) {
+        console.error('Erro na resposta da API:', response.status, response.statusText)
         throw new Error('Erro ao buscar pedidos')
       }
       
@@ -89,44 +91,51 @@ export default function PedidosPage() {
       console.log('Pedidos carregados:', ordersData.length)
       console.log('Dados dos pedidos:', ordersData)
       
+      if (!Array.isArray(ordersData)) {
+        console.error('Dados dos pedidos não é um array:', ordersData)
+        setOrders([])
+        return
+      }
+      
       // Mapear dados do banco para o formato da interface
-      const mappedOrders = ordersData.map((order: any) => {
+      const mappedOrders = ordersData.map((order: any, index: number) => {
         console.log('Order original:', order)
         console.log('Items:', order.items)
         
         const mapped = {
           id: order.id,
-          numero: order.numero,
+          numero: order.numero || String(index + 1).padStart(3, '0'),
           cliente: {
             nome: order.cliente?.nome || order.clienteNome || 'Cliente não informado',
             telefone: order.cliente?.telefone || order.clienteTelefone || '',
             endereco: order.cliente?.endereco || order.endereco || ''
           },
-          itens: order.items?.map((item: any) => {
+          itens: (order.items || []).map((item: any) => {
             console.log('Item original:', item)
             return {
               produto: item.produtoNome || item.product?.nome || 'Produto',
               quantidade: item.quantidade || 1,
               preco: Number(item.precoUnitario) || Number(item.preco) || 0
             }
-          }) || [],
+          }),
           total: Number(order.total) || 0,
-          formaPagamento: order.formaPagamento || 'Não informado',
+          formaPagamento: order.formaPagamento || 'Dinheiro',
           tipoEntrega: order.tipoEntrega || 'retirada',
           status: order.status || 'PENDENTE',
           dataEntrega: order.dataEntrega || order.dataPedido,
           observacoes: order.observacoes || '',
-          createdAt: order.dataPedido || order.createdAt
+          createdAt: order.dataPedido || order.createdAt || new Date().toISOString()
         }
         
         console.log('Order mapeada:', mapped)
         return mapped
-      })
+      }).filter(order => order.id) // Filtrar apenas pedidos válidos
       
+      console.log('Pedidos mapeados final:', mappedOrders)
       setOrders(mappedOrders)
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error)
-      // Manter alguns dados de exemplo se a API falhar
+      // Se falhar, tentar mostrar dados de fallback
       setOrders([])
     } finally {
       setLoading(false)
@@ -295,12 +304,19 @@ export default function PedidosPage() {
                   : 'Nenhum pedido ainda'
                 }
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 {filter === 'TODOS' 
                   ? 'Ainda não há pedidos cadastrados no sistema'
                   : `Não há pedidos com status ${getOrderStatusText(filter)}`
                 }
               </p>
+              <button
+                onClick={loadOrders}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Recarregar
+              </button>
             </div>
           ) : (
             <div className="space-y-4">

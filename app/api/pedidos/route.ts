@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    console.log('API: Iniciando busca de pedidos...')
+    
     const pedidos = await prisma.order.findMany({
       include: {
         cliente: true,
@@ -18,13 +20,24 @@ export async function GET() {
       take: 50
     })
 
-    // Adicionar numeração de 3 dígitos baseada na ordem de criação
-    const pedidosComNumero = pedidos.reverse().map((pedido, index) => ({
-      ...pedido,
-      numero: String(index + 1).padStart(3, '0')
-    })).reverse()
+    console.log(`API: ${pedidos.length} pedidos encontrados no banco`)
+    
+    if (pedidos.length > 0) {
+      console.log('API: Primeiro pedido:', JSON.stringify(pedidos[0], null, 2))
+    }
 
-    console.log(`API: ${pedidos.length} pedidos encontrados`)
+    // Adicionar numeração de 3 dígitos baseada na ordem de criação
+    const pedidosComNumero = pedidos.reverse().map((pedido, index) => {
+      const numeroFormatado = String(index + 1).padStart(3, '0')
+      console.log(`API: Processando pedido ${pedido.id} -> número ${numeroFormatado}`)
+      
+      return {
+        ...pedido,
+        numero: numeroFormatado
+      }
+    }).reverse()
+
+    console.log(`API: Retornando ${pedidosComNumero.length} pedidos com numeração`)
     return NextResponse.json(pedidosComNumero)
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error)
