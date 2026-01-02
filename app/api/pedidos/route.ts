@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       clienteTelefone,
       total, 
       tipoEntrega, 
+      formaPagamento,
       endereco, 
       dataEntrega, 
       observacoes, 
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
         total,
         status: status || 'PENDENTE',
         tipoEntrega: tipoEntrega || 'retirada',
+        formaPagamento: formaPagamento || 'Dinheiro',
         endereco,
         dataEntrega: dataEntrega ? new Date(dataEntrega) : null,
         observacoes

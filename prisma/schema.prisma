@@ -96,21 +96,22 @@ model Customer {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  clienteId   String?     @map("cliente_id")
-  clienteNome String      @map("cliente_nome")
-  total       Decimal     @db.Decimal(10, 2)
-  status      OrderStatus @default(PENDENTE)
-  tipoEntrega String      @default("retirada") @map("tipo_entrega")
-  endereco    String?
-  dataPedido  DateTime    @default(now()) @map("data_pedido")
-  dataEntrega DateTime?   @map("data_entrega")
-  observacoes String?
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-  items       OrderItem[]
-  cliente     Customer?   @relation(fields: [clienteId], references: [id])
-  sales       Sale[]
+  id            String      @id @default(cuid())
+  clienteId     String?     @map("cliente_id")
+  clienteNome   String      @map("cliente_nome")
+  total         Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDENTE)
+  tipoEntrega   String      @default("retirada") @map("tipo_entrega")
+  formaPagamento String?    @default("Dinheiro") @map("forma_pagamento")
+  endereco      String?
+  dataPedido    DateTime    @default(now()) @map("data_pedido")
+  dataEntrega   DateTime?   @map("data_entrega")
+  observacoes   String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  items         OrderItem[]
+  cliente       Customer?   @relation(fields: [clienteId], references: [id])
+  sales         Sale[]
 
   @@map("orders")
 }
