@@ -147,14 +147,22 @@ export default function AcompanharPedido() {
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex gap-3">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.history.back()
+                }
+              }}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </button>
             <button
-              onClick={() => window.location.href = '/loja'}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/loja'
+                }
+              }}
               className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
             >
               <Home className="h-4 w-4" />
@@ -315,7 +323,11 @@ export default function AcompanharPedido() {
         {/* Actions */}
         <div className="flex gap-3">
           <button
-            onClick={() => window.location.href = '/loja'}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.location.href = '/loja'
+              }
+            }}
             className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center justify-center gap-2"
           >
             <Package className="h-5 w-5" />
@@ -323,15 +335,17 @@ export default function AcompanharPedido() {
           </button>
           <button
             onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: 'Meu Pedido - Caseirinhos',
-                  text: `Acompanhe meu pedido #${order.numero}`,
-                  url: window.location.href
-                })
-              } else {
-                navigator.clipboard.writeText(window.location.href)
-                alert('Link copiado! 📋')
+              if (typeof window !== 'undefined') {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'Meu Pedido - Caseirinhos',
+                    text: `Acompanhe meu pedido #${order.numero}`,
+                    url: window.location.href
+                  })
+                } else {
+                  navigator.clipboard.writeText(window.location.href)
+                  alert('Link copiado! 📋')
+                }
               }
             }}
             className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"

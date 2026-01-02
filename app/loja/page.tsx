@@ -107,7 +107,9 @@ export default function LojaPage() {
   ]
 
   const saveCartToStorage = useCallback(() => {
-    localStorage.setItem('caseirinhos_cart', JSON.stringify(cart))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('caseirinhos_cart', JSON.stringify(cart))
+    }
   }, [cart])
 
   const loadProducts = async () => {
@@ -125,9 +127,11 @@ export default function LojaPage() {
   }
 
   const loadCartFromStorage = () => {
-    const savedCart = localStorage.getItem('caseirinhos_cart')
-    if (savedCart) {
-      setCart(JSON.parse(savedCart))
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('caseirinhos_cart')
+      if (savedCart) {
+        setCart(JSON.parse(savedCart))
+      }
     }
   }
 
@@ -172,7 +176,9 @@ export default function LojaPage() {
 
   const clearCart = () => {
     setCart([])
-    localStorage.removeItem('caseirinhos_cart')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('caseirinhos_cart')
+    }
   }
 
   const getTotalPrice = () => {
@@ -257,12 +263,12 @@ export default function LojaPage() {
         setShowSuccessModal(true)
         
         // Solicitar permissão para notificações
-        if ('Notification' in window && Notification.permission === 'default') {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
           Notification.requestPermission()
         }
         
         // Mostrar notificação do navegador se permitido
-        if ('Notification' in window && Notification.permission === 'granted') {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           new Notification('Pedido realizado com sucesso! 🎉', {
             body: `Seu pedido #${pedidoData.numero || '001'} foi enviado. Acompanhe o status pelo link enviado.`,
             icon: '/favicon.ico'
@@ -786,13 +792,15 @@ export default function LojaPage() {
                   <input
                     type="text"
                     readOnly
-                    value={`${window.location.origin}/acompanhar/${orderNumber}`}
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/acompanhar/${orderNumber}` : ''}
                     className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-1 text-gray-600"
                   />
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/acompanhar/${orderNumber}`)
-                      alert('Link copiado! 📋')
+                      if (typeof window !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(`${window.location.origin}/acompanhar/${orderNumber}`)
+                        alert('Link copiado! 📋')
+                      }
                     }}
                     className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700"
                   >
@@ -804,7 +812,9 @@ export default function LojaPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    window.open(`/acompanhar/${orderNumber}`, '_blank')
+                    if (typeof window !== 'undefined') {
+                      window.open(`/acompanhar/${orderNumber}`, '_blank')
+                    }
                   }}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                 >

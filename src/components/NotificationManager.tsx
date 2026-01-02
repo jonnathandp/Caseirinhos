@@ -12,7 +12,7 @@ export default function NotificationManager({ onPermissionChange }: Notification
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission)
       
       // Mostrar prompt se for a primeira vez
@@ -26,7 +26,7 @@ export default function NotificationManager({ onPermissionChange }: Notification
   }, [])
 
   const requestPermission = async () => {
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       const result = await Notification.requestPermission()
       setPermission(result)
       setShowPrompt(false)
@@ -46,10 +46,12 @@ export default function NotificationManager({ onPermissionChange }: Notification
 
   const dismissPrompt = () => {
     setShowPrompt(false)
-    localStorage.setItem('notification-asked', 'true')
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('notification-asked', 'true')
+    }
   }
 
-  if (!('Notification' in window) || permission === 'granted' || !showPrompt) {
+  if (typeof window === 'undefined' || !('Notification' in window) || permission === 'granted' || !showPrompt) {
     return null
   }
 
