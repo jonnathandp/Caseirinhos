@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
         acc.push({
           id: venda.orderId,
           data: venda.dataVenda.toISOString(),
-          cliente: venda.order.customer?.nome || 'Cliente não identificado',
-          clienteId: venda.order.customerId,
+          cliente: venda.order.cliente?.nome || 'Cliente não identificado',
+          clienteId: venda.order.clienteId,
           produtos: [venda.produtoNome],
           total: parseFloat(venda.subtotal.toString()),
           metodo: venda.order.formaPagamento || 'dinheiro',
