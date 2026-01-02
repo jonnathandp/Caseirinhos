@@ -252,8 +252,8 @@ async function main() {
       for (let j = 0; j < numProdutos; j++) {
         const produto = allProducts[Math.floor(Math.random() * allProducts.length)]
         const quantidade = Math.floor(Math.random() * 3) + 1
-        const subtotal = produto.preco * quantidade
-        totalPedido += Number(subtotal)
+        const subtotal = Number(produto.preco) * quantidade
+        totalPedido += subtotal
         
         items.push({
           productId: produto.id,
