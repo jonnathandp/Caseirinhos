@@ -46,7 +46,7 @@ export default function VendasPage() {
       loadSalesData()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, selectedPeriod, viewType])
+  }, [session, selectedPeriod, viewType, selectedDate, selectedMonth])
 
   const loadSalesData = async () => {
     try {
