@@ -11,23 +11,57 @@ export async function GET() {
     await prisma.$connect()
     console.log('API Clientes: Conectado ao banco')
     
-    const clientes = await prisma.customer.findMany({
-      orderBy: { nome: 'asc' }
-    })
-
-    console.log(`API Clientes: ${clientes.length} clientes encontrados`)
-    
-    // Log dos primeiros clientes para debug
-    if (clientes.length > 0) {
-      console.log('Primeiro cliente:', {
-        id: clientes[0].id,
-        nome: clientes[0].nome,
-        email: clientes[0].email,
-        telefone: clientes[0].telefone
+    // Tentar buscar com observacoes primeiro
+    try {
+      const clientes = await prisma.customer.findMany({
+        orderBy: { nome: 'asc' }
       })
-    }
 
-    return NextResponse.json(clientes)
+      console.log(`API Clientes: ${clientes.length} clientes encontrados`)
+      
+      // Log dos primeiros clientes para debug
+      if (clientes.length > 0) {
+        console.log('Primeiro cliente:', {
+          id: clientes[0].id,
+          nome: clientes[0].nome,
+          email: clientes[0].email,
+          telefone: clientes[0].telefone
+        })
+      }
+
+      return NextResponse.json(clientes)
+    } catch (schemaError: any) {
+      // Se falhar por causa da coluna observacoes, buscar sem ela
+      if (schemaError.message?.includes('observacoes')) {
+        console.log('Coluna observacoes não existe, buscando sem ela...')
+        
+        const clientes = await prisma.customer.findMany({
+          select: {
+            id: true,
+            nome: true,
+            email: true,
+            telefone: true,
+            endereco: true,
+            dataNascimento: true,
+            pontosFidelidade: true,
+            createdAt: true,
+            updatedAt: true
+          },
+          orderBy: { nome: 'asc' }
+        })
+
+        console.log(`API Clientes: ${clientes.length} clientes encontrados (sem observacoes)`)
+        
+        // Adicionar observacoes como null para manter compatibilidade
+        const clientesComObservacoes = clientes.map(cliente => ({
+          ...cliente,
+          observacoes: null
+        }))
+
+        return NextResponse.json(clientesComObservacoes)
+      }
+      throw schemaError
+    }
   } catch (error) {
     console.error('Erro ao buscar clientes:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'

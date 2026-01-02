@@ -15,7 +15,8 @@ import {
   UserPlus,
   Edit2,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react'
 
 interface Customer {
@@ -110,6 +111,31 @@ export default function ClientesPage() {
     }
   }
 
+  const syncCustomerSchema = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/schema/customers', {
+        method: 'POST'
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao sincronizar schema')
+      }
+      
+      alert(`Sucesso: ${result.message}`)
+      
+      // Recarregar os clientes após a sincronização
+      await loadCustomers()
+    } catch (error) {
+      console.error('Erro ao sincronizar schema:', error)
+      alert('Erro ao sincronizar schema: ' + (error instanceof Error ? error.message : 'Erro desconhecido'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const openModal = (customer?: Customer) => {
     if (customer) {
       setEditingCustomer(customer)
@@ -146,6 +172,37 @@ export default function ClientesPage() {
       dataNascimento: '',
       observacoes: ''
     })
+  }
+
+  const syncCustomerSchema = async () => {
+    try {
+      setLoading(true)
+      console.log('Sincronizando schema de clientes...')
+      
+      const response = await fetch('/api/schema/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok && result.success) {
+        alert(`✅ Schema sincronizado!\n\n${result.operations.join('\n')}`)
+        // Recarregar clientes após sincronização
+        await loadCustomers()
+      } else {
+        alert(`❌ Erro na sincronização:\n\n${result.details || result.error}`)
+      }
+      
+      console.log('Resultado da sincronização:', result)
+    } catch (error) {
+      console.error('Erro ao sincronizar schema:', error)
+      alert(`❌ Erro ao sincronizar:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -240,6 +297,15 @@ export default function ClientesPage() {
             
             
             <div className="flex gap-2">
+              <button 
+                onClick={syncCustomerSchema}
+                className="inline-flex items-center px-3 py-2 border border-orange-300 text-orange-700 text-sm rounded-md hover:bg-orange-50 transition-colors"
+                disabled={loading}
+                title="Sincronizar estrutura do banco (adicionar campo observações)"
+              >
+                <Settings className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Sync Schema
+              </button>
               <button 
                 onClick={loadCustomers}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
