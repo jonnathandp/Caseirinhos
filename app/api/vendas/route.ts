@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       include: {
         order: {
           include: {
-            customer: true
+            cliente: true
           }
         },
         product: true
