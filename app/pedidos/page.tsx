@@ -22,7 +22,8 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  Database
+  Database,
+  Settings
 } from 'lucide-react'
 
 interface Order {
@@ -83,6 +84,38 @@ export default function PedidosPage() {
     } catch (error) {
       console.error('Erro ao testar conexão:', error)
       alert(`❌ Erro ao testar conexão:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const syncDatabaseSchema = async () => {
+    try {
+      setLoading(true)
+      console.log('Sincronizando schema do banco de dados...')
+      
+      const response = await fetch('/api/schema/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok && result.success) {
+        alert(`✅ Schema sincronizado com sucesso!\n\nOperações realizadas:\n${result.operations.join('\n')}`)
+        
+        // Recarregar pedidos após sincronização
+        await loadOrders()
+      } else {
+        alert(`❌ Erro na sincronização:\n\n${result.details || result.error}`)
+      }
+      
+      console.log('Resultado da sincronização:', result)
+    } catch (error) {
+      console.error('Erro ao sincronizar schema:', error)
+      alert(`❌ Erro ao sincronizar schema:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     } finally {
       setLoading(false)
     }
@@ -378,6 +411,14 @@ export default function PedidosPage() {
                 >
                   <Database className="h-4 w-4" />
                   <span className="hidden sm:inline">Testar DB</span>
+                </button>
+                <button
+                  onClick={syncDatabaseSchema}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors"
+                  disabled={loading}
+                >
+                  <Settings className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Sync</span>
                 </button>
                 <button
                   onClick={updateDatabaseOrders}
