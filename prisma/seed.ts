@@ -217,21 +217,28 @@ async function main() {
   for (const cliente of clientes) {
     const createdCustomer = await prisma.customer.upsert({
       where: { email: cliente.email },
-      update: {},create({
-      data
+      update: {},
+      create: cliente,
+    })
+
     console.log('👤 Cliente criado:', createdCustomer.nome)
   }
+  
+  console.log('🔍 A - Antes do DEBUG')
+  console.log('🔍 DEBUG: Loop de clientes concluído')
+  console.log('🔍 B - Depois do DEBUG')
 
   // Criar pedidos e vendas de exemplo
-  const allProducts = await prisma.product.findMany()
-  const allCustomers = await prisma.customer.findMany()
+  try {
+    const allProducts = await prisma.product.findMany()
+    const allCustomers = await prisma.customer.findMany()
 
-  console.log(`📊 Produtos encontrados: ${allProducts.length}`)
-  console.log(`👥 Clientes encontrados: ${allCustomers.length}`)
+    console.log(`📊 Produtos encontrados: ${allProducts.length}`)
+    console.log(`👥 Clientes encontrados: ${allCustomers.length}`)
 
-  if (allProducts.length > 0 && allCustomers.length > 0) {
-    console.log('🔄 Criando pedidos e vendas...')
-    // Criar pedidos dos últimos 7 dias
+    if (allProducts.length > 0 && allCustomers.length > 0) {
+      console.log('🔄 Criando pedidos e vendas...')
+      // Criar pedidos dos últimos 7 dias
     for (let i = 0; i < 15; i++) {
       const dataVenda = new Date()
       dataVenda.setDate(dataVenda.getDate() - Math.floor(Math.random() * 7))
@@ -259,13 +266,15 @@ async function main() {
       
       const order = await prisma.order.create({
         data: {
-          clienteId: cliente.id,
           clienteNome: cliente.nome,
           total: totalPedido,
           status: ['CONFIRMADO', 'ENTREGUE'][Math.floor(Math.random() * 2)] as any,
           tipoEntrega: ['retirada', 'entrega'][Math.floor(Math.random() * 2)],
           formaPagamento: ['Dinheiro', 'Cartão', 'Pix'][Math.floor(Math.random() * 3)],
           dataPedido: dataVenda,
+          cliente: {
+            connect: { id: cliente.id }
+          },
           items: {
             create: items
           }
@@ -289,6 +298,8 @@ async function main() {
       
       console.log(`📦 Pedido criado: ${order.id} - ${cliente.nome} - R$ ${totalPedido.toFixed(2)}`)
     }
+  } catch (error) {
+    console.error('❌ Erro ao criar pedidos:', error)
   }
 
   console.log('✅ Seed concluído com sucesso!')
