@@ -21,6 +21,7 @@ interface DailyStats {
   data: string
   vendas: number
   faturamento: number
+  periodo?: string
 }
 
 export default function VendasPage() {

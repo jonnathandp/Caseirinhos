@@ -76,9 +76,9 @@ export default function PedidosPage() {
     if (session) {
       loadOrders()
     }
-  }, [session, selectedPeriod]) // Removendo loadOrders da dependência para evitar loop
+  }, [session, loadOrders])
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       console.log('Carregando pedidos da API...')
       const response = await fetch(`/api/pedidos?periodo=${selectedPeriod}`)
@@ -105,7 +105,7 @@ export default function PedidosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedPeriod])
 
   const handleCreateSampleOrders = async () => {
     try {
