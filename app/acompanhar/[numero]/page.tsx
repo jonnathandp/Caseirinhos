@@ -42,6 +42,8 @@ export default function AcompanharPedido() {
   const [order, setOrder] = useState<OrderStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [showThanks, setShowThanks] = useState(false)
 
   const numero = params?.numero as string
 
@@ -55,6 +57,13 @@ export default function AcompanharPedido() {
       }
       
       const orderData = await response.json()
+      
+      // Verificar se o status mudou para ENTREGUE
+      if (order && order.status !== 'ENTREGUE' && orderData.status === 'ENTREGUE') {
+        setShowThanks(true)
+        setAutoRefresh(false) // Parar atualização automática quando entregue
+      }
+      
       setOrder(orderData)
     } catch (error) {
       console.error('Erro ao carregar pedido:', error)
@@ -62,16 +71,30 @@ export default function AcompanharPedido() {
     } finally {
       setLoading(false)
     }
-  }, [numero])
+  }, [numero, order])
 
   useEffect(() => {
     if (numero) {
       loadOrderStatus()
-      // Auto-refresh a cada 30 segundos
-      const interval = setInterval(loadOrderStatus, 30000)
-      return () => clearInterval(interval)
+      
+      // Auto-refresh a cada 10 segundos se autoRefresh estiver ativo
+      let interval: NodeJS.Timeout | null = null
+      if (autoRefresh) {
+        interval = setInterval(loadOrderStatus, 10000) // Mudou de 30s para 10s
+      }
+      
+      return () => {
+        if (interval) clearInterval(interval)
+      }
     }
-  }, [numero, loadOrderStatus])
+  }, [numero, loadOrderStatus, autoRefresh])
+
+  // Parar auto-refresh quando o pedido for entregue
+  useEffect(() => {
+    if (order?.status === 'ENTREGUE') {
+      setAutoRefresh(false)
+    }
+  }, [order?.status])
 
   const getStatusInfo = (status: string) => {
     const statusMap = {
@@ -186,15 +209,47 @@ export default function AcompanharPedido() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Acompanhar Pedido</h1>
-              <p className="text-gray-600">Caseirinhos Delicious</p>
+              <div className="flex items-center gap-2">
+                <p className="text-gray-600">Caseirinhos Delicious</p>
+                {autoRefresh && order?.status !== 'ENTREGUE' && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Atualizando em tempo real</span>
+                  </div>
+                )}
+                {!autoRefresh && order?.status === 'ENTREGUE' && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span>Pedido finalizado</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={loadOrderStatus}
-              className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
-              title="Atualizar status"
-            >
-              <RefreshCw className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className={`p-2 rounded-lg transition-colors ${
+                  autoRefresh 
+                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-gray-100'
+                }`}
+                title={autoRefresh ? "Pausar atualizações" : "Ativar atualizações"}
+                disabled={order?.status === 'ENTREGUE'}
+              >
+                {autoRefresh ? (
+                  <div className="animate-pulse">⏸️</div>
+                ) : (
+                  <div>▶️</div>
+                )}
+              </button>
+              <button
+                onClick={loadOrderStatus}
+                className="p-2 text-gray-600 hover:text-primary-600 transition-colors hover:bg-gray-100 rounded-lg"
+                title="Atualizar agora"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -364,6 +419,45 @@ export default function AcompanharPedido() {
           </p>
         </div>
       </div>
+
+      {/* Modal de Agradecimento */}
+      {showThanks && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full text-center animate-pulse">
+            <div className="p-4 bg-green-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">🎉 Pedido Entregue!</h2>
+            <p className="text-gray-600 mb-6">
+              Obrigado por escolher a <strong>Caseirinhos Delicious</strong>! 
+              Esperamos que tenha gostado dos nossos produtos artesanais.
+            </p>
+            <div className="bg-green-50 p-4 rounded-lg mb-6">
+              <p className="text-green-800 text-sm font-medium">
+                ⭐ Sua avaliação é muito importante para nós!
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowThanks(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Fechar
+              </button>
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/loja'
+                  }
+                }}
+                className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium"
+              >
+                Fazer Novo Pedido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
