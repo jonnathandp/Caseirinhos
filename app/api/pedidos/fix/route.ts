@@ -64,8 +64,9 @@ export async function POST() {
     
   } catch (error) {
     console.error('API Fix: Erro ao corrigir pedidos:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     return NextResponse.json(
-      { error: 'Erro ao corrigir pedidos', details: error.message },
+      { error: 'Erro ao corrigir pedidos', details: errorMessage },
       { status: 500 }
     )
   }
