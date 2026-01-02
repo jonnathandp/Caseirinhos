@@ -265,12 +265,41 @@ export default function VendasPage() {
             </div>
           </div>
 
-          {/* Resumo de Fechamento - Semanal/Mensal */}
-          {(viewType === 'weekly' || viewType === 'monthly') && dailyStats.length > 0 && (
+          {/* Resumo de Fechamento - Semanal/Mensal/Diário */}
+          {(viewType === 'weekly' || viewType === 'monthly' || viewType === 'closing') && dailyStats.length > 0 && (
             <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-6 mb-8 border border-primary-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                📊 Resumo do Fechamento {viewType === 'weekly' ? 'Semanal' : 'Mensal'}
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-0">
+                  📊 Resumo do Fechamento {viewType === 'weekly' ? 'Semanal' : viewType === 'monthly' ? 'Mensal' : 'Diário'}
+                </h3>
+                {/* Botões de Ação para Fechamento */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const totalPeriodos = dailyStats.length
+                      const totalFaturamento = dailyStats.reduce((sum, stat) => sum + stat.faturamento, 0)
+                      const mediaPorPeriodo = totalFaturamento / totalPeriodos
+                      const tipoTexto = viewType === 'weekly' ? 'Semanal' : viewType === 'monthly' ? 'Mensal' : 'Diário'
+                      const unidadeTexto = viewType === 'weekly' ? 'semanas' : viewType === 'monthly' ? 'meses' : 'dia'
+                      const unidadeSingular = viewType === 'weekly' ? 'semana' : viewType === 'monthly' ? 'mês' : 'dia'
+                      
+                      alert(`📊 Resumo do Fechamento ${tipoTexto}:\n\n` +
+                        `• ${totalPeriodos} ${totalPeriodos === 1 ? unidadeSingular : unidadeTexto} analisados\n` +
+                        `• Faturamento Total: R$ ${totalFaturamento.toFixed(2)}\n` +
+                        `• Média por ${unidadeSingular}: R$ ${mediaPorPeriodo.toFixed(2)}`)
+                    }}
+                    className="px-3 py-1.5 text-xs bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors"
+                  >
+                    📋 Resumo
+                  </button>
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                  >
+                    📄 Relatório
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600">Períodos Analisados</p>
