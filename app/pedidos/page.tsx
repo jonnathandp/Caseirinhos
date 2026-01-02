@@ -64,6 +64,68 @@ export default function PedidosPage() {
     setExpandedOrders(newExpanded)
   }
 
+  const updateDatabaseOrders = async () => {
+    try {
+      setLoading(true)
+      console.log('Atualizando pedidos no banco de dados...')
+      
+      const response = await fetch('/api/pedidos/fix', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Resultado da atualização:', result)
+        
+        // Recarregar pedidos após atualização
+        await loadOrders()
+        
+        alert('Pedidos atualizados com sucesso! ✅')
+      } else {
+        console.error('Erro ao atualizar pedidos')
+        alert('Erro ao atualizar pedidos ❌')
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar pedidos:', error)
+      alert('Erro ao atualizar pedidos ❌')
+    } finally {
+      setLoading(false)
+    }
+  }
+    try {
+      setLoading(true)
+      console.log('Atualizando pedidos no banco de dados...')
+      
+      const response = await fetch('/api/pedidos/fix', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Resultado da atualização:', result)
+        
+        // Recarregar pedidos após atualização
+        await loadOrders()
+        
+        alert('Pedidos atualizados com sucesso! ✅')
+      } else {
+        console.error('Erro ao atualizar pedidos')
+        alert('Erro ao atualizar pedidos ❌')
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar pedidos:', error)
+      alert('Erro ao atualizar pedidos ❌')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (status === 'loading') return
     if (status === 'unauthenticated') {
@@ -97,16 +159,70 @@ export default function PedidosPage() {
         return
       }
       
+      // Se não há pedidos, criar alguns dados de exemplo para demonstração
+      if (ordersData.length === 0) {
+        console.log('Nenhum pedido encontrado, criando dados de exemplo...')
+        const exemploOrders = [
+          {
+            id: 'exemplo-1',
+            numero: '001',
+            clienteNome: 'Maria Silva',
+            total: 28.50,
+            formaPagamento: 'PIX',
+            tipoEntrega: 'delivery',
+            endereco: 'Rua das Flores, 123',
+            status: 'PENDENTE',
+            dataPedido: new Date().toISOString(),
+            observacoes: 'Pedido de exemplo - Sem glúten por favor',
+            items: [
+              {
+                produtoNome: 'Brigadeiro Gourmet',
+                quantidade: 1,
+                precoUnitario: 3.50
+              },
+              {
+                produtoNome: 'Bolo Formigueiro',
+                quantidade: 1,
+                precoUnitario: 25.00
+              }
+            ]
+          },
+          {
+            id: 'exemplo-2',
+            numero: '002',
+            clienteNome: 'João Santos',
+            total: 45.00,
+            formaPagamento: 'Cartão',
+            tipoEntrega: 'retirada',
+            status: 'PRONTO',
+            dataPedido: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+            items: [
+              {
+                produtoNome: 'Bolo de Chocolate',
+                quantidade: 1,
+                precoUnitario: 45.00
+              }
+            ]
+          }
+        ]
+        setOrders(exemploOrders)
+        setLoading(false)
+        return
+      }
+      
       // Mapear dados do banco para o formato da interface
       const mappedOrders = ordersData.map((order: any, index: number) => {
         console.log('Order original:', order)
         console.log('Items:', order.items)
         
+        // Garantir que temos um cliente válido
+        const clienteNome = order.cliente?.nome || order.clienteNome || `Cliente ${index + 1}`
+        
         const mapped = {
           id: order.id,
           numero: order.numero || String(index + 1).padStart(3, '0'),
           cliente: {
-            nome: order.cliente?.nome || order.clienteNome || 'Cliente não informado',
+            nome: clienteNome,
             telefone: order.cliente?.telefone || order.clienteTelefone || '',
             endereco: order.cliente?.endereco || order.endereco || ''
           },
@@ -114,12 +230,12 @@ export default function PedidosPage() {
             console.log('Item original:', item)
             return {
               produto: item.produtoNome || item.product?.nome || 'Produto',
-              quantidade: item.quantidade || 1,
+              quantidade: Number(item.quantidade) || 1,
               preco: Number(item.precoUnitario) || Number(item.preco) || 0
             }
           }),
           total: Number(order.total) || 0,
-          formaPagamento: order.formaPagamento || 'Dinheiro',
+          formaPagamento: order.formaPagamento || 'Dinheiro', // Valor padrão
           tipoEntrega: order.tipoEntrega || 'retirada',
           status: order.status || 'PENDENTE',
           dataEntrega: order.dataEntrega || order.dataPedido,
@@ -129,7 +245,7 @@ export default function PedidosPage() {
         
         console.log('Order mapeada:', mapped)
         return mapped
-      }).filter(order => order.id) // Filtrar apenas pedidos válidos
+      }).filter(order => order.id && order.cliente.nome) // Filtrar apenas pedidos válidos
       
       console.log('Pedidos mapeados final:', mappedOrders)
       setOrders(mappedOrders)
@@ -249,6 +365,14 @@ export default function PedidosPage() {
                   <Store className="h-4 w-4" />
                   <span className="hidden sm:inline">Loja</span>
                 </a>
+                <button
+                  onClick={updateDatabaseOrders}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={loading}
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Corrigir</span>
+                </button>
               </div>
             </div>
             

@@ -23,7 +23,14 @@ export async function GET() {
     console.log(`API: ${pedidos.length} pedidos encontrados no banco`)
     
     if (pedidos.length > 0) {
-      console.log('API: Primeiro pedido:', JSON.stringify(pedidos[0], null, 2))
+      console.log('API: Primeiro pedido:', JSON.stringify({
+        id: pedidos[0].id,
+        clienteNome: pedidos[0].clienteNome,
+        total: pedidos[0].total,
+        formaPagamento: pedidos[0].formaPagamento,
+        status: pedidos[0].status,
+        itemsCount: pedidos[0].items?.length || 0
+      }, null, 2))
     }
 
     // Adicionar numeração de 3 dígitos baseada na ordem de criação
@@ -31,13 +38,28 @@ export async function GET() {
       const numeroFormatado = String(index + 1).padStart(3, '0')
       console.log(`API: Processando pedido ${pedido.id} -> número ${numeroFormatado}`)
       
+      // Garantir que formaPagamento sempre tenha um valor
+      const formaPagamentoSegura = pedido.formaPagamento || 'Dinheiro'
+      
       return {
         ...pedido,
-        numero: numeroFormatado
+        numero: numeroFormatado,
+        formaPagamento: formaPagamentoSegura
       }
     }).reverse()
 
     console.log(`API: Retornando ${pedidosComNumero.length} pedidos com numeração`)
+    
+    // Log adicional para debug
+    if (pedidosComNumero.length > 0) {
+      console.log('API: Exemplo do primeiro pedido processado:', {
+        id: pedidosComNumero[0].id,
+        numero: pedidosComNumero[0].numero,
+        clienteNome: pedidosComNumero[0].clienteNome,
+        formaPagamento: pedidosComNumero[0].formaPagamento
+      })
+    }
+    
     return NextResponse.json(pedidosComNumero)
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error)
