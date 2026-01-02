@@ -87,6 +87,7 @@ model Customer {
   telefone         String?   @unique
   endereco         String?
   dataNascimento   DateTime? @map("data_nascimento")
+  observacoes      String?
   pontosFidelidade Int       @default(0) @map("pontos_fidelidade")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
