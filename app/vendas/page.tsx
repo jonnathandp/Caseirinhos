@@ -158,7 +158,7 @@ export default function VendasPage() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Diário
+                  Total
                 </button>
                 <button
                   onClick={() => setViewType('closing')}
@@ -168,7 +168,7 @@ export default function VendasPage() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Fechamento
+                  Diário
                 </button>
                 <button
                   onClick={() => setViewType('weekly')}
@@ -311,7 +311,7 @@ export default function VendasPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-0">
-                {viewType === 'daily' ? 'Performance Diária' : 
+                {viewType === 'daily' ? 'Performance Total' : 
                  viewType === 'closing' ? 'Fechamento do Dia' :
                  viewType === 'weekly' ? 'Performance Semanal' : 
                  'Performance Mensal'}
@@ -494,7 +494,7 @@ export default function VendasPage() {
                     🎂 Caseirinhos Deliciosos - Relatório de Vendas
                   </h2>
                   <p className="text-primary-100">
-                    {viewType === 'daily' ? 'Relatório Diário' : 
+                    {viewType === 'daily' ? 'Relatório Total' : 
                      viewType === 'closing' ? `Fechamento do Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
                      viewType === 'weekly' ? 'Relatório Semanal' : 
                      `Fechamento de ${selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}`}
