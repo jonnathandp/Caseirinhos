@@ -67,6 +67,23 @@ export default function VendasPage() {
     }
   }
 
+  const handleSeedVendas = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/seed-vendas', { method: 'POST' })
+      if (response.ok) {
+        const result = await response.json()
+        alert(`✅ ${result.message}`)
+        loadSalesData()
+      } else {
+        alert('❌ Erro ao criar vendas de exemplo')
+      }
+    } catch (error) {
+      console.error('Erro ao criar vendas:', error)
+      alert('❌ Erro ao conectar com o servidor')
+    }
+  }
+
   const totalSales = sales.length
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0)
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0
@@ -216,7 +233,13 @@ export default function VendasPage() {
               <div className="text-center py-12">
                 <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma venda encontrada</h3>
-                <p className="text-gray-600">As vendas aparecerão aqui quando forem realizadas.</p>
+                <p className="text-gray-600 mb-6">As vendas aparecerão aqui quando forem realizadas.</p>
+                <button
+                  onClick={handleSeedVendas}
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  📦 Criar Vendas de Exemplo
+                </button>
               </div>
             ) : (
               <div className="overflow-x-auto">

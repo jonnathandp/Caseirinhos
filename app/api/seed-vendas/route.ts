@@ -22,6 +22,7 @@ export async function POST() {
     for (let i = 0; i < 15; i++) {
       const dataVenda = new Date()
       dataVenda.setDate(dataVenda.getDate() - Math.floor(Math.random() * 7))
+      dataVenda.setHours(Math.floor(Math.random() * 12) + 8) // Entre 8h e 19h
       
       const cliente = customers[Math.floor(Math.random() * customers.length)]
       const numProdutos = Math.floor(Math.random() * 3) + 1

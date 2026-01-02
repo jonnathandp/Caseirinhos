@@ -5,11 +5,10 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporariamente remover autenticação para debug
-    // const session = await getServerSession(authOptions)
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    // }
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get('periodo') || '7' // dias
@@ -36,19 +35,6 @@ export async function GET(request: NextRequest) {
         dataVenda: 'desc'
       }
     })
-
-    console.log(`🔍 DEBUG: Encontradas ${vendas.length} vendas desde ${dataInicio.toISOString()}`)
-
-    // Debug: buscar todas as vendas
-    const todasVendas = await prisma.sale.findMany({
-      take: 5,
-      orderBy: { dataVenda: 'desc' }
-    })
-    console.log('🔍 DEBUG: Últimas 5 vendas:', todasVendas.map(v => ({
-      id: v.id,
-      data: v.dataVenda.toISOString(),
-      produto: v.produtoNome
-    })))
 
     // Agrupar vendas por pedido para exibir
     const vendasPorPedido = vendas.reduce((acc: any[], venda) => {
