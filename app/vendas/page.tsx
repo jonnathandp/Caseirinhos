@@ -34,6 +34,7 @@ export default function VendasPage() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
   const [showReportModal, setShowReportModal] = useState(false)
+  const [itemsToShow, setItemsToShow] = useState(20)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -243,6 +244,8 @@ export default function VendasPage() {
                       <option value="15">15 dias</option>
                       <option value="30">30 dias</option>
                       <option value="90">90 dias</option>
+                      <option value="365">1 ano</option>
+                      <option value="999999">Todas as vendas</option>
                     </select>
                   </div>
                 )}
@@ -342,7 +345,9 @@ export default function VendasPage() {
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Vendas Recentes</h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">Lista das vendas realizadas</p>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                Lista das vendas realizadas {totalSales > 0 && `(${totalSales} total)`}
+              </p>
             </div>
             
             {loading ? (
@@ -357,33 +362,73 @@ export default function VendasPage() {
                 <p className="mt-1 text-sm text-gray-500">Ainda não há vendas registradas no sistema.</p>
               </div>
             ) : (
-              <ul className="divide-y divide-gray-200">
-                {sales.slice(0, 10).map((sale) => (
-                  <li key={sale.id} className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <ShoppingBag className="h-5 w-5 text-primary-600" />
+              <div>
+                <ul className="divide-y divide-gray-200">
+                  {sales.slice(0, itemsToShow).map((sale) => (
+                    <li key={sale.id} className="px-4 py-4 sm:px-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
+                              <ShoppingBag className="h-5 w-5 text-primary-600" />
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{sale.cliente}</div>
+                            <div className="text-sm text-gray-500">
+                              {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • {getPaymentMethodName(sale.metodo)}
+                            </div>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{sale.cliente}</div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-green-600">R$ {sale.total.toFixed(2)}</div>
                           <div className="text-sm text-gray-500">
-                            {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • {getPaymentMethodName(sale.metodo)}
+                            {new Date(sale.data).toLocaleDateString('pt-BR')}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-green-600">R$ {sale.total.toFixed(2)}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(sale.data).toLocaleDateString('pt-BR')}
-                        </div>
-                      </div>
+                    </li>
+                  ))}
+                </ul>
+                
+                {/* Controles de Paginação */}
+                {sales.length > itemsToShow && (
+                  <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
+                    <p className="text-sm text-gray-700">
+                      Mostrando <span className="font-medium">{itemsToShow}</span> de{' '}
+                      <span className="font-medium">{sales.length}</span> vendas
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setItemsToShow(prev => Math.min(prev + 50, sales.length))}
+                        className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-500"
+                      >
+                        Carregar mais 50
+                      </button>
+                      <button
+                        onClick={() => setItemsToShow(sales.length)}
+                        className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-500"
+                      >
+                        Mostrar todas ({sales.length})
+                      </button>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                )}
+                
+                {itemsToShow >= sales.length && sales.length > 20 && (
+                  <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
+                    <p className="text-sm text-gray-700">
+                      Mostrando todas as <span className="font-medium">{sales.length}</span> vendas
+                    </p>
+                    <button
+                      onClick={() => setItemsToShow(20)}
+                      className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-500"
+                    >
+                      Mostrar apenas 20
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
