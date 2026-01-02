@@ -33,6 +33,7 @@ export default function VendasPage() {
   const [viewType, setViewType] = useState<'daily' | 'weekly' | 'monthly' | 'closing'>('daily')
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -333,20 +334,10 @@ export default function VendasPage() {
                     📋 Resumo
                   </button>
                   <button
-                    onClick={() => {
-                      const csvData = dailyStats.map(stat => 
-                        `${stat.periodo || stat.data},${stat.vendas},${stat.faturamento.toFixed(2)}`
-                      ).join('\n')
-                      const blob = new Blob([`Período,Vendas,Faturamento\n${csvData}`], { type: 'text/csv' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `fechamento-${viewType}-${new Date().toISOString().split('T')[0]}.csv`
-                      a.click()
-                    }}
+                    onClick={() => setShowReportModal(true)}
                     className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                   >
-                    📊 Exportar
+                    📄 Relatório
                   </button>
                 </div>
               )}
@@ -490,6 +481,202 @@ export default function VendasPage() {
           </div>
         </div>
       </div>
+      
+      {/* Modal de Relatório */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+            {/* Cabeçalho do Relatório */}
+            <div className="bg-primary-600 text-white p-6 rounded-t-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    🎂 Caseirinhos Deliciosos - Relatório de Vendas
+                  </h2>
+                  <p className="text-primary-100">
+                    {viewType === 'daily' ? 'Relatório Diário' : 
+                     viewType === 'closing' ? `Fechamento do Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
+                     viewType === 'weekly' ? 'Relatório Semanal' : 
+                     `Fechamento de ${selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}`}
+                  </p>
+                  <p className="text-primary-200 text-sm">
+                    Gerado em: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="text-white hover:text-primary-200 transition-colors text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo do Relatório */}
+            <div className="p-6">
+              {/* Resumo Geral */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-primary-200 pb-2">
+                  📈 Resumo Geral
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center mb-2">
+                      <div className="bg-green-500 rounded-full p-2 mr-3">
+                        <DollarSign className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900">Faturamento Total</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-green-700">R$ {totalRevenue.toFixed(2)}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center mb-2">
+                      <div className="bg-blue-500 rounded-full p-2 mr-3">
+                        <ShoppingBag className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900">Total de Vendas</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-700">{totalSales} pedidos</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center mb-2">
+                      <div className="bg-purple-500 rounded-full p-2 mr-3">
+                        <BarChart3 className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900">Ticket Médio</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-700">R$ {averageTicket.toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance por Período */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-primary-200 pb-2">
+                  📅 Performance por Período
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">
+                          {viewType === 'daily' || viewType === 'closing' ? 'Data' : 'Período'}
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">Vendas</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 border-b">Faturamento</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">Participação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dailyStats.map((stat, index) => {
+                        const participacao = totalRevenue > 0 ? (stat.faturamento / totalRevenue * 100) : 0
+                        return (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                              {viewType === 'daily' || viewType === 'closing' ? (
+                                new Date(stat.data).toLocaleDateString('pt-BR', { 
+                                  weekday: 'short', 
+                                  day: '2-digit', 
+                                  month: 'short' 
+                                })
+                              ) : (
+                                stat.periodo || stat.data
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center text-gray-900 border-b">{stat.vendas}</td>
+                            <td className="px-4 py-3 text-sm text-right text-gray-900 border-b font-semibold">
+                              R$ {stat.faturamento.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center text-gray-900 border-b">
+                              <div className="flex items-center justify-center">
+                                <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
+                                  <div 
+                                    className="bg-primary-600 h-2 rounded-full"
+                                    style={{ width: `${participacao}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs">{participacao.toFixed(1)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Estatísticas Adicionais */}
+              {(viewType === 'weekly' || viewType === 'monthly') && dailyStats.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-primary-200 pb-2">
+                    📊 Estatísticas do Fechamento
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                      <p className="text-sm text-amber-700 font-medium">Períodos Analisados</p>
+                      <p className="text-2xl font-bold text-amber-800">{dailyStats.length}</p>
+                    </div>
+                    <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                      <p className="text-sm text-emerald-700 font-medium">Melhor Período</p>
+                      <div className="text-sm font-medium text-emerald-900">
+                        {(() => {
+                          const melhor = dailyStats.reduce((max, curr) => 
+                            curr.faturamento > max.faturamento ? curr : max, dailyStats[0])
+                          return viewType === 'weekly' ? melhor.periodo : melhor.data
+                        })()}
+                        <br />
+                        <span className="text-emerald-700 font-bold">
+                          R$ {dailyStats.reduce((max, curr) => 
+                            curr.faturamento > max.faturamento ? curr : max, dailyStats[0]).faturamento.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                      <p className="text-sm text-cyan-700 font-medium">Média por {viewType === 'weekly' ? 'Semana' : 'Mês'}</p>
+                      <p className="text-lg font-bold text-cyan-800">
+                        R$ {(dailyStats.reduce((sum, stat) => sum + stat.faturamento, 0) / dailyStats.length).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                      <p className="text-sm text-indigo-700 font-medium">Total de Vendas</p>
+                      <p className="text-lg font-bold text-indigo-800">
+                        {dailyStats.reduce((sum, stat) => sum + stat.vendas, 0)} pedidos
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Rodapé */}
+              <div className="border-t pt-4 mt-8">
+                <div className="text-center text-gray-500 text-sm">
+                  <p>🎂 <strong>Caseirinhos Deliciosos</strong> - Sistema de Gestão</p>
+                  <p>Relatório gerado automaticamente em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-between items-center">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors flex items-center gap-2"
+              >
+                🖨️ Imprimir
+              </button>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }
