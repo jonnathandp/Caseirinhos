@@ -239,7 +239,7 @@ async function main() {
     if (allProducts.length > 0 && allCustomers.length > 0) {
       console.log('🔄 Criando pedidos e vendas...')
       // Criar pedidos dos últimos 7 dias
-    for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 15; i++) {
       const dataVenda = new Date()
       dataVenda.setDate(dataVenda.getDate() - Math.floor(Math.random() * 7))
       
@@ -297,6 +297,7 @@ async function main() {
       }
       
       console.log(`📦 Pedido criado: ${order.id} - ${cliente.nome} - R$ ${totalPedido.toFixed(2)}`)
+    }
     }
   } catch (error) {
     console.error('❌ Erro ao criar pedidos:', error)
