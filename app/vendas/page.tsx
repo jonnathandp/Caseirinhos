@@ -30,7 +30,9 @@ export default function VendasPage() {
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState('7')
-  const [viewType, setViewType] = useState<'daily' | 'weekly' | 'monthly'>('daily')
+  const [viewType, setViewType] = useState<'daily' | 'weekly' | 'monthly' | 'closing'>('daily')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -49,7 +51,16 @@ export default function VendasPage() {
   const loadSalesData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/vendas?periodo=${selectedPeriod}&tipo=${viewType}`)
+      let url = `/api/vendas?periodo=${selectedPeriod}&tipo=${viewType}`
+      
+      if (viewType === 'closing' && selectedDate) {
+        url += `&data=${selectedDate}`
+      }
+      if (viewType === 'monthly' && selectedMonth) {
+        url += `&mes=${selectedMonth}`
+      }
+      
+      const response = await fetch(url)
       
       if (response.ok) {
         const data = await response.json()
@@ -149,6 +160,16 @@ export default function VendasPage() {
                   Diário
                 </button>
                 <button
+                  onClick={() => setViewType('closing')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    viewType === 'closing'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Fechamento
+                </button>
+                <button
                   onClick={() => setViewType('weekly')}
                   className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     viewType === 'weekly'
@@ -169,15 +190,38 @@ export default function VendasPage() {
                   Mensal
                 </button>
               </div>
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="7">Últimos 7 dias</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="90">Últimos 90 dias</option>
-              </select>
+              
+              {/* Seletores Específicos */}
+              {viewType === 'closing' && (
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                />
+              )}
+              
+              {viewType === 'monthly' && (
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Selecione o mês"
+                />
+              )}
+              
+              {(viewType === 'daily' || viewType === 'weekly') && (
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 90 dias</option>
+                </select>
+              )}
             </div>
           </div>
 
@@ -266,7 +310,10 @@ export default function VendasPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-0">
-                Performance {viewType === 'daily' ? 'Diária' : viewType === 'weekly' ? 'Semanal' : 'Mensal'}
+                {viewType === 'daily' ? 'Performance Diária' : 
+                 viewType === 'closing' ? 'Fechamento do Dia' :
+                 viewType === 'weekly' ? 'Performance Semanal' : 
+                 'Performance Mensal'}
               </h3>
               {/* Ações Rápidas para Fechamento */}
               {(viewType === 'weekly' || viewType === 'monthly') && (

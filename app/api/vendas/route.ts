@@ -28,14 +28,37 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get('periodo') || '7' // dias
-    const tipo = searchParams.get('tipo') || 'daily' // daily, weekly, monthly
+    const tipo = searchParams.get('tipo') || 'daily' // daily, weekly, monthly, closing
+    const dataEspecifica = searchParams.get('data') // para fechamento diário
+    const mesEspecifico = searchParams.get('mes') // para fechamento mensal
 
     console.log(`=== API Vendas ===`)
     console.log(`Período: ${periodo} dias`)
     console.log(`Tipo: ${tipo}`)
+    console.log(`Data específica: ${dataEspecifica}`)
+    console.log(`Mês específico: ${mesEspecifico}`)
 
-    const dataInicio = new Date()
-    dataInicio.setDate(dataInicio.getDate() - parseInt(periodo))
+    let dataInicio: Date
+    let dataFim: Date
+    
+    if (tipo === 'closing' && dataEspecifica) {
+      // Fechamento de um dia específico
+      dataInicio = new Date(dataEspecifica)
+      dataInicio.setHours(0, 0, 0, 0)
+      dataFim = new Date(dataEspecifica)
+      dataFim.setHours(23, 59, 59, 999)
+    } else if (tipo === 'monthly' && mesEspecifico) {
+      // Fechamento de um mês específico (formato: YYYY-MM)
+      const [ano, mes] = mesEspecifico.split('-')
+      dataInicio = new Date(parseInt(ano), parseInt(mes) - 1, 1)
+      dataFim = new Date(parseInt(ano), parseInt(mes), 0) // Último dia do mês
+      dataFim.setHours(23, 59, 59, 999)
+    } else {
+      // Período normal
+      dataInicio = new Date()
+      dataInicio.setDate(dataInicio.getDate() - parseInt(periodo))
+      dataFim = new Date()
+    }
     
     console.log(`Data início: ${dataInicio.toISOString()}`)
     console.log(`Data atual: ${new Date().toISOString()}`)
@@ -44,7 +67,8 @@ export async function GET(request: NextRequest) {
     const vendas = await prisma.sale.findMany({
       where: {
         dataVenda: {
-          gte: dataInicio
+          gte: dataInicio,
+          lte: dataFim
         }
       },
       include: {
@@ -86,13 +110,47 @@ export async function GET(request: NextRequest) {
     // Calcular estatísticas baseadas no tipo de visualização
     let estatisticas: Estatistica[] = []
     
-    if (tipo === 'daily') {
+    if (tipo === 'closing') {
+      // Fechamento diário - vendas de um dia específico
+      console.log(`Fechamento do dia: ${dataEspecifica}`)
+      
+      const vendasDoDia = await prisma.sale.groupBy({
+        by: ['orderId'],
+        where: {
+          dataVenda: {
+            gte: dataInicio,
+            lte: dataFim
+          }
+        },
+        _sum: {
+          subtotal: true
+        },
+        _count: {
+          id: true
+        }
+      })
+
+      const totalVendas = vendasDoDia.length
+      const totalFaturamento = vendasDoDia.reduce((sum, v) => 
+        sum + Number(v._sum.subtotal || 0), 0)
+
+      estatisticas = [{
+        data: dataEspecifica || '',
+        vendas: totalVendas,
+        faturamento: totalFaturamento,
+        periodo: `Fechamento do dia ${new Date(dataEspecifica || '').toLocaleDateString('pt-BR')}`
+      }]
+      
+      console.log(`Fechamento processado: ${totalVendas} vendas, R$ ${totalFaturamento.toFixed(2)}`)
+      
+    } else if (tipo === 'daily') {
       // Estatísticas diárias usando Prisma groupBy
       const vendasGrouped = await prisma.sale.groupBy({
         by: ['dataVenda'],
         where: {
           dataVenda: {
-            gte: dataInicio
+            gte: dataInicio,
+            lte: dataFim
           }
         },
         _count: {
@@ -132,7 +190,8 @@ export async function GET(request: NextRequest) {
       const todasVendas = await prisma.sale.findMany({
         where: {
           dataVenda: {
-            gte: dataInicio
+            gte: dataInicio,
+            lte: dataFim
           }
         },
         select: {
@@ -188,7 +247,8 @@ export async function GET(request: NextRequest) {
       const todasVendas = await prisma.sale.findMany({
         where: {
           dataVenda: {
-            gte: dataInicio
+            gte: dataInicio,
+            lte: dataFim
           }
         },
         select: {
