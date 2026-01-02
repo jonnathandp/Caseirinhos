@@ -26,14 +26,11 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [filterLowStock, setFilterLowStock] = useState(false)
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
     preco: '',
-    categoria: '',
-    estoque: '',
-    estoqueMinimo: ''
+    categoria: ''
   })
 
   useEffect(() => {
@@ -72,11 +69,6 @@ export default function ProdutosPage() {
       descricao: formData.descricao.trim() || '',
       preco: parseFloat(formData.preco) || 0,
       categoria: formData.categoria.trim(),
-      estoque: {
-        quantidade: parseInt(formData.estoque) || 0,
-        quantidadeMinima: parseInt(formData.estoqueMinimo) || 0,
-        unidade: 'unidade'
-      },
       ativo: true
     }
 
@@ -97,7 +89,7 @@ export default function ProdutosPage() {
       }
 
       if (response.ok) {
-        setFormData({ nome: '', descricao: '', preco: '', categoria: '', estoque: '', estoqueMinimo: '' })
+        setFormData({ nome: '', descricao: '', preco: '', categoria: '' })
         setShowForm(false)
         setEditingProduct(null)
         loadProducts() // Recarregar a lista
@@ -116,9 +108,7 @@ export default function ProdutosPage() {
       nome: product.nome || '',
       descricao: product.descricao || '',
       preco: Number(product.preco || 0).toString(),
-      categoria: product.categoria || '',
-      estoque: product.estoque?.quantidade ? product.estoque.quantidade.toString() : '',
-      estoqueMinimo: product.estoque?.quantidadeMinima ? product.estoque.quantidadeMinima.toString() : ''
+      categoria: product.categoria || ''
     })
     setShowForm(true)
   }
@@ -129,12 +119,6 @@ export default function ProdutosPage() {
     const searchLower = searchTerm.toLowerCase()
     const matchesSearch = product.nome.toLowerCase().includes(searchLower) ||
       (product.categoria && product.categoria.toLowerCase().includes(searchLower))
-    
-    if (filterLowStock) {
-      const hasLowStock = product.estoque && 
-        (product.estoque.quantidade || 0) <= (product.estoque.quantidadeMinima || 0)
-      return matchesSearch && hasLowStock
-    }
     
     return matchesSearch
   })
@@ -171,7 +155,7 @@ export default function ProdutosPage() {
             <button
               onClick={() => {
                 setEditingProduct(null)
-                setFormData({ nome: '', descricao: '', preco: '', categoria: '', estoque: '', estoqueMinimo: '' })
+                setFormData({ nome: '', descricao: '', preco: '', categoria: '' })
                 setShowForm(true)
               }}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-colors"
@@ -206,7 +190,6 @@ export default function ProdutosPage() {
                 <label htmlFor="filterLowStock" className="ml-2 block text-sm text-gray-700">
                   Mostrar apenas produtos com estoque baixo
                 </label>
-              </div>
             </div>
           </div>
 
@@ -289,35 +272,6 @@ export default function ProdutosPage() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label htmlFor="estoque" className="block text-sm font-medium text-gray-700 mb-1">
-                          Estoque Atual
-                        </label>
-                        <input
-                          id="estoque"
-                          type="number"
-                          placeholder="Quantidade disponível"
-                          value={formData.estoque}
-                          onChange={(e) => setFormData({...formData, estoque: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="estoqueMinimo" className="block text-sm font-medium text-gray-700 mb-1">
-                          Estoque Mínimo
-                        </label>
-                        <input
-                          id="estoqueMinimo"
-                          type="number"
-                          placeholder="Alerta de estoque baixo"
-                          value={formData.estoqueMinimo}
-                          onChange={(e) => setFormData({...formData, estoqueMinimo: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                    </div>
-                    
                     <div className="flex gap-3 pt-4">
                       <button
                         type="submit"
@@ -374,24 +328,6 @@ export default function ProdutosPage() {
                       R$ {Number(product.preco || 0).toFixed(2)}
                     </span>
                   </div>
-
-                  {product.estoque && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Estoque:</span>
-                        <div className="flex items-center">
-                          <Package className="h-4 w-4 mr-1 text-gray-400" />
-                          <span className={
-                            (product.estoque.quantidade || 0) <= (product.estoque.quantidadeMinima || 0) 
-                              ? 'text-red-600 font-medium' 
-                              : 'text-gray-900'
-                          }>
-                            {product.estoque.quantidade || 0} {product.estoque.unidade || 'unidades'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
