@@ -43,7 +43,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { nome, preco, categoria, descricao, estoque, ativo } = await request.json()
+    const { nome, preco, custo, categoria, descricao, imagem, estoque, ativo } = await request.json()
 
     // Atualizar o produto
     const product = await prisma.product.update({
@@ -51,8 +51,10 @@ export async function PUT(
       data: {
         nome,
         preco,
+        custo: custo || 0,
         categoria,
         descricao,
+        imagem,
         ativo
       }
     })

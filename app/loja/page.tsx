@@ -16,7 +16,8 @@ import {
   Banknote,
   Smartphone,
   QrCode,
-  ArrowLeft
+  ArrowLeft,
+  Image
 } from 'lucide-react'
 import NotificationManager from '../../src/components/NotificationManager'
 
@@ -26,6 +27,7 @@ interface Product {
   categoria: string
   preco: number
   descricao?: string
+  imagem?: string | null
   estoque?: {
     quantidade: number
     quantidadeMinima: number
@@ -377,11 +379,35 @@ export default function LojaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(product => (
               <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                {/* Imagem do Produto */}
+                <div className="mb-4">
+                  {product.imagem ? (
+                    <img 
+                      src={product.imagem} 
+                      alt={product.nome}
+                      className="w-full h-48 object-cover rounded-md"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        if (e.currentTarget.nextElementSibling) {
+                          (e.currentTarget.nextElementSibling as HTMLElement).classList.remove('hidden')
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-48 bg-gray-100 rounded-md flex items-center justify-center ${product.imagem ? 'hidden' : ''}`}>
+                    <div className="text-center">
+                      <Image className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <span className="text-gray-500 text-sm">Sem imagem</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informações do Produto */}
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.nome}</h3>
                   <p className="text-sm text-gray-600 mb-2">{product.categoria}</p>
                   {product.descricao && (
-                    <p className="text-sm text-gray-500 mb-3">{product.descricao}</p>
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.descricao}</p>
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-primary-600">
