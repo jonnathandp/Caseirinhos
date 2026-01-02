@@ -11,11 +11,6 @@ interface Product {
   descricao: string
   preco: number | string
   categoria: string
-  estoque?: {
-    quantidade: number
-    quantidadeMinima: number
-    unidade: string
-  }
   ativo: boolean
 }
 
