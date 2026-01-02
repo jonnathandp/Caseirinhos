@@ -52,6 +52,7 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<Order['status'] | 'TODOS'>('TODOS')
+  const [selectedPeriod, setSelectedPeriod] = useState('7')
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
 
   const toggleOrderExpansion = (orderId: string) => {
@@ -75,12 +76,12 @@ export default function PedidosPage() {
     if (session) {
       loadOrders()
     }
-  }, [session])
+  }, [session, selectedPeriod])
 
   const loadOrders = async () => {
     try {
       console.log('Carregando pedidos da API...')
-      const response = await fetch('/api/pedidos')
+      const response = await fetch(`/api/pedidos?periodo=${selectedPeriod}`)
       
       if (!response.ok) {
         console.error('Erro na resposta da API:', response.status, response.statusText)
@@ -97,85 +98,68 @@ export default function PedidosPage() {
         return
       }
       
-      // Se não há pedidos, criar alguns dados de exemplo para demonstração
-      if (ordersData.length === 0) {
-        console.log('Nenhum pedido encontrado, criando dados de exemplo...')
-        const exemploOrders = [
-          {
-            id: 'exemplo-1',
-            numero: 1,
-            cliente: {
-              nome: 'Maria Silva',
-              telefone: '(11) 99999-9999',
-              endereco: 'Rua das Flores, 123'
-            },
-            itens: [
-              {
-                produto: 'Brigadeiro Gourmet',
-                quantidade: 1,
-                preco: 3.50
-              },
-              {
-                produto: 'Bolo Formigueiro',
-                quantidade: 1,
-                preco: 25.00
-              }
-            ],
-            total: 28.50,
-            formaPagamento: 'PIX',
-            tipoEntrega: 'delivery',
-            status: 'PENDENTE' as const,
-            dataEntrega: new Date().toISOString(),
-            observacoes: 'Pedido de exemplo - Sem glúten por favor',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'exemplo-2',
-            numero: 2,
-            cliente: {
-              nome: 'João Santos',
-              telefone: '(11) 88888-8888',
-              endereco: ''
-            },
-            itens: [
-              {
-                produto: 'Bolo de Chocolate',
-                quantidade: 1,
-                preco: 45.00
-              }
-            ],
-            total: 45.00,
-            formaPagamento: 'Cartão',
-            tipoEntrega: 'retirada',
-            status: 'PRONTO' as const,
-            dataEntrega: new Date(Date.now() + 86400000).toISOString(), // 1 dia no futuro
-            observacoes: '',
-            createdAt: new Date(Date.now() - 86400000).toISOString() // 1 dia atrás
-          }
-        ]
-        setOrders(exemploOrders)
-        setLoading(false)
-        return
+      setOrders(ordersData)
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error)
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateSampleOrders = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/seed-vendas', { method: 'POST' })
+      if (response.ok) {
+        const result = await response.json()
+        alert(`✅ ${result.message}`)
+        loadOrders()
+      } else {
+        alert('❌ Erro ao criar pedidos de exemplo')
+      }
+    } catch (error) {
+      console.error('Erro ao criar pedidos:', error)
+      alert('❌ Erro ao conectar com o servidor')
+    }
+  }
+
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      console.log(`Atualizando status do pedido ${orderId} para ${newStatus}`)
+      
+      // Atualizar no estado local primeiro para resposta imediata
+      setOrders(orders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ))
+      
+      // Enviar para a API
+      const response = await fetch('/api/pedidos', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar status no servidor')
       }
       
-      // Mapear dados do banco para o formato da interface
-      const mappedOrders = ordersData.map((order: any, index: number) => {
-        console.log('Order original:', order)
-        console.log('Items:', order.items)
-        
-        // Garantir que temos um cliente válido
-        const clienteNome = order.cliente?.nome || order.clienteNome || `Cliente ${index + 1}`
-        
-        const mapped = {
-          id: order.id,
-          numero: order.numero || String(index + 1).padStart(3, '0'),
-          cliente: {
-            nome: clienteNome,
-            telefone: order.cliente?.telefone || order.clienteTelefone || '',
-            endereco: order.cliente?.endereco || order.endereco || ''
-          },
-          itens: (order.items || []).map((item: any) => {
-            console.log('Item original:', item)
+      console.log('Status atualizado com sucesso no banco')
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error)
+      
+      // Reverter mudança local se houver erro
+      const originalOrder = orders.find(order => order.id === orderId)
+      if (originalOrder) {
+        setOrders(orders.map(order =>
+          order.id === orderId ? originalOrder : order
+        ))
+      }
+      
+      alert('Erro ao atualizar status do pedido. Tente novamente.')
+    }
             return {
               produto: item.produtoNome || item.product?.nome || 'Produto',
               quantidade: Number(item.quantidade) || 1,
@@ -336,6 +320,23 @@ export default function PedidosPage() {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
+
+              {/* Filtro de Período */}
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="3">Últimos 3 dias</option>
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="15">Últimos 15 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 3 meses</option>
+                  <option value="365">Último ano</option>
+                </select>
+              </div>
               
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {['TODOS', 'PENDENTE', 'PREPARANDO', 'PRONTO', 'ENTREGUE', 'CANCELADO'].map((status) => (
@@ -382,13 +383,23 @@ export default function PedidosPage() {
                   : `Não há pedidos com status ${getOrderStatusText(filter)}`
                 }
               </p>
-              <button
-                onClick={loadOrders}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Recarregar
-              </button>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={loadOrders}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Recarregar
+                </button>
+                {filter === 'TODOS' && (
+                  <button
+                    onClick={handleCreateSampleOrders}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  >
+                    📦 Criar Pedidos de Exemplo
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">

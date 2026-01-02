@@ -3,11 +3,22 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     console.log('API: Iniciando busca de pedidos...')
     
+    const { searchParams } = new URL(request.url)
+    const periodo = searchParams.get('periodo') || '7' // dias
+
+    const dataInicio = new Date()
+    dataInicio.setDate(dataInicio.getDate() - parseInt(periodo))
+    
     const pedidos = await prisma.order.findMany({
+      where: {
+        dataPedido: {
+          gte: dataInicio
+        }
+      },
       include: {
         cliente: true,
         items: {
@@ -17,7 +28,7 @@ export async function GET() {
         }
       },
       orderBy: { dataPedido: 'desc' },
-      take: 50
+      take: 100
     })
 
     console.log(`API: ${pedidos.length} pedidos encontrados no banco`)
