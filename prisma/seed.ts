@@ -92,17 +92,13 @@ async function main() {
   ]
 
   for (const produto of produtos) {
-    const createdProduct = await prisma.product.upsert({
-      where: { nome: produto.nome },
-      update: {},
-      create: produto,
+    const createdProduct = await prisma.product.create({
+      data: produto,
     })
 
     // Criar estoque para cada produto
-    await prisma.stock.upsert({
-      where: { productId: createdProduct.id },
-      update: {},
-      create: {
+    await prisma.stock.create({
+      data: {
         productId: createdProduct.id,
         produtoNome: createdProduct.nome,
         quantidade: Math.floor(Math.random() * 50) + 10, // 10-60 unidades
@@ -167,10 +163,8 @@ async function main() {
   ]
 
   for (const ingrediente of ingredientes) {
-    const createdIngredient = await prisma.ingredient.upsert({
-      where: { nome: ingrediente.nome },
-      update: {},
-      create: ingrediente,
+    const createdIngredient = await prisma.ingredient.create({
+      data: ingrediente,
     })
 
     console.log('🥄 Ingrediente criado:', createdIngredient.nome)
@@ -223,11 +217,78 @@ async function main() {
   for (const cliente of clientes) {
     const createdCustomer = await prisma.customer.upsert({
       where: { email: cliente.email },
-      update: {},
-      create: cliente,
-    })
-
+      update: {},create({
+      data
     console.log('👤 Cliente criado:', createdCustomer.nome)
+  }
+
+  // Criar pedidos e vendas de exemplo
+  const allProducts = await prisma.product.findMany()
+  const allCustomers = await prisma.customer.findMany()
+
+  console.log(`📊 Produtos encontrados: ${allProducts.length}`)
+  console.log(`👥 Clientes encontrados: ${allCustomers.length}`)
+
+  if (allProducts.length > 0 && allCustomers.length > 0) {
+    console.log('🔄 Criando pedidos e vendas...')
+    // Criar pedidos dos últimos 7 dias
+    for (let i = 0; i < 15; i++) {
+      const dataVenda = new Date()
+      dataVenda.setDate(dataVenda.getDate() - Math.floor(Math.random() * 7))
+      
+      const cliente = allCustomers[Math.floor(Math.random() * allCustomers.length)]
+      const numProdutos = Math.floor(Math.random() * 3) + 1
+      
+      let totalPedido = 0
+      const items = []
+      
+      for (let j = 0; j < numProdutos; j++) {
+        const produto = allProducts[Math.floor(Math.random() * allProducts.length)]
+        const quantidade = Math.floor(Math.random() * 3) + 1
+        const subtotal = produto.preco * quantidade
+        totalPedido += Number(subtotal)
+        
+        items.push({
+          productId: produto.id,
+          produtoNome: produto.nome,
+          quantidade,
+          precoUnitario: produto.preco,
+          subtotal
+        })
+      }
+      
+      const order = await prisma.order.create({
+        data: {
+          clienteId: cliente.id,
+          clienteNome: cliente.nome,
+          total: totalPedido,
+          status: ['CONFIRMADO', 'ENTREGUE'][Math.floor(Math.random() * 2)] as any,
+          tipoEntrega: ['retirada', 'entrega'][Math.floor(Math.random() * 2)],
+          formaPagamento: ['Dinheiro', 'Cartão', 'Pix'][Math.floor(Math.random() * 3)],
+          dataPedido: dataVenda,
+          items: {
+            create: items
+          }
+        }
+      })
+      
+      // Criar registros de venda para cada item do pedido
+      for (const item of items) {
+        await prisma.sale.create({
+          data: {
+            orderId: order.id,
+            productId: item.productId,
+            produtoNome: item.produtoNome,
+            quantidade: item.quantidade,
+            precoUnitario: item.precoUnitario,
+            subtotal: item.subtotal,
+            dataVenda
+          }
+        })
+      }
+      
+      console.log(`📦 Pedido criado: ${order.id} - ${cliente.nome} - R$ ${totalPedido.toFixed(2)}`)
+    }
   }
 
   console.log('✅ Seed concluído com sucesso!')
