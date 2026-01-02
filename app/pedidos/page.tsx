@@ -21,9 +21,7 @@ import {
   EyeOff,
   ChevronDown,
   ChevronUp,
-  RefreshCw,
-  Database,
-  Settings
+  RefreshCw
 } from 'lucide-react'
 
 interface Order {
@@ -64,95 +62,6 @@ export default function PedidosPage() {
       newExpanded.add(orderId)
     }
     setExpandedOrders(newExpanded)
-  }
-
-  const testDatabaseConnection = async () => {
-    try {
-      setLoading(true)
-      console.log('Testando conexão com banco de dados...')
-      
-      const response = await fetch('/api/health/db')
-      const result = await response.json()
-      
-      if (response.ok) {
-        alert(`✅ Banco de dados conectado!\n\nStatus: ${result.status}\nTabelas: ${result.tables?.length || 0}\nPedidos: ${result.counts?.orders || 0}\nItens: ${result.counts?.orderItems || 0}`)
-      } else {
-        alert(`❌ Problema na conexão:\n\n${result.error}`)
-      }
-      
-      console.log('Resultado do teste:', result)
-    } catch (error) {
-      console.error('Erro ao testar conexão:', error)
-      alert(`❌ Erro ao testar conexão:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const syncDatabaseSchema = async () => {
-    try {
-      setLoading(true)
-      console.log('Sincronizando schema do banco de dados...')
-      
-      const response = await fetch('/api/schema/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok && result.success) {
-        alert(`✅ Schema sincronizado com sucesso!\n\nOperações realizadas:\n${result.operations.join('\n')}`)
-        
-        // Recarregar pedidos após sincronização
-        await loadOrders()
-      } else {
-        alert(`❌ Erro na sincronização:\n\n${result.details || result.error}`)
-      }
-      
-      console.log('Resultado da sincronização:', result)
-    } catch (error) {
-      console.error('Erro ao sincronizar schema:', error)
-      alert(`❌ Erro ao sincronizar schema:\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const updateDatabaseOrders = async () => {
-    try {
-      setLoading(true)
-      console.log('Atualizando pedidos no banco de dados...')
-      
-      const response = await fetch('/api/pedidos/fix', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Resultado da atualização:', result)
-        
-        // Recarregar pedidos após atualização
-        await loadOrders()
-        
-        alert(`Pedidos atualizados com sucesso! ✅\n${result.message}\nTotal: ${result.totalOrders} pedidos\nAtualizados: ${result.updated} pedidos`)
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }))
-        console.error('Erro ao atualizar pedidos:', response.status, errorData)
-        alert(`Erro ao atualizar pedidos ❌\nStatus: ${response.status}\nDetalhes: ${errorData.details || errorData.error}`)
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar pedidos:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Erro de conexão'
-      alert(`Erro ao atualizar pedidos ❌\nDetalhes: ${errorMessage}`)
-    } finally {
-      setLoading(false)
-    }
   }
 
   useEffect(() => {
@@ -405,28 +314,12 @@ export default function PedidosPage() {
                   <span className="hidden sm:inline">Loja</span>
                 </a>
                 <button
-                  onClick={testDatabaseConnection}
-                  className="inline-flex items-center gap-1 px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-                  disabled={loading}
-                >
-                  <Database className="h-4 w-4" />
-                  <span className="hidden sm:inline">Testar DB</span>
-                </button>
-                <button
-                  onClick={syncDatabaseSchema}
-                  className="inline-flex items-center gap-1 px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors"
-                  disabled={loading}
-                >
-                  <Settings className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">Sync</span>
-                </button>
-                <button
-                  onClick={updateDatabaseOrders}
+                  onClick={loadOrders}
                   className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                   disabled={loading}
                 >
                   <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">Corrigir</span>
+                  <span className="hidden sm:inline">Atualizar</span>
                 </button>
               </div>
             </div>
