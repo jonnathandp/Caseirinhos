@@ -11,7 +11,12 @@ import {
   Phone,
   User,
   Clock,
-  Calendar
+  Calendar,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  QrCode,
+  ArrowLeft
 } from 'lucide-react'
 
 interface Product {
@@ -40,6 +45,14 @@ interface CustomerData {
   dataEntrega: string
 }
 
+interface PaymentMethod {
+  id: string
+  name: string
+  description: string
+  icon: React.ComponentType<any>
+  enabled: boolean
+}
+
 export default function LojaPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
@@ -48,6 +61,8 @@ export default function LojaPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('todos')
   const [showCart, setShowCart] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
   const [customerData, setCustomerData] = useState<CustomerData>({
     nome: '',
     telefone: '',
@@ -56,6 +71,37 @@ export default function LojaPage() {
     tipoEntrega: 'retirada',
     dataEntrega: ''
   })
+
+  const paymentMethods: PaymentMethod[] = [
+    {
+      id: 'money',
+      name: 'Dinheiro',
+      description: 'Pagamento em espécie na entrega/retirada',
+      icon: Banknote,
+      enabled: true
+    },
+    {
+      id: 'card',
+      name: 'Cartão',
+      description: 'Débito ou crédito na entrega/retirada',
+      icon: CreditCard,
+      enabled: true
+    },
+    {
+      id: 'pix',
+      name: 'PIX',
+      description: 'Transferência instantânea via PIX',
+      icon: Smartphone,
+      enabled: true
+    },
+    {
+      id: 'qrcode',
+      name: 'QR Code',
+      description: 'Pagamento via QR Code (PicPay, etc.)',
+      icon: QrCode,
+      enabled: true
+    }
+  ]
 
   useEffect(() => {
     loadProducts()
@@ -144,19 +190,29 @@ export default function LojaPage() {
     return matchesSearch && matchesCategory
   })
 
-  const handleSubmitOrder = async () => {
+  const handleCheckoutValidation = () => {
     if (cart.length === 0) {
       alert('Adicione produtos ao carrinho')
-      return
+      return false
     }
 
     if (!customerData.nome || !customerData.telefone) {
       alert('Preencha nome e telefone')
-      return
+      return false
     }
 
     if (customerData.tipoEntrega === 'delivery' && !customerData.endereco) {
       alert('Preencha o endereço para delivery')
+      return false
+    }
+    
+    return true
+  }
+
+  const handleSubmitOrder = async () => {
+
+    if (!selectedPaymentMethod) {
+      alert('Selecione uma forma de pagamento')
       return
     }
 
@@ -169,6 +225,7 @@ export default function LojaPage() {
         endereco: customerData.tipoEntrega === 'delivery' ? customerData.endereco : null,
         dataEntrega: customerData.dataEntrega || null,
         observacoes: customerData.observacoes,
+        formaPagamento: selectedPaymentMethod.name,
         status: 'PENDENTE',
         items: cart.map(item => ({
           productId: item.product.id,
@@ -186,9 +243,11 @@ export default function LojaPage() {
       })
 
       if (response.ok) {
-        alert('Pedido realizado com sucesso! Em breve entraremos em contato.')
+        alert(`Pedido realizado com sucesso!\nForma de pagamento: ${selectedPaymentMethod.name}\nEm breve entraremos em contato.`)
         clearCart()
         setShowCheckout(false)
+        setShowPayment(false)
+        setSelectedPaymentMethod(null)
         setCustomerData({
           nome: '',
           telefone: '',
@@ -418,7 +477,7 @@ export default function LojaPage() {
               </div>
             </div>
             
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmitOrder(); }} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); if(handleCheckoutValidation()) { setShowCheckout(false); setShowPayment(true); } }} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nome completo *
@@ -554,7 +613,7 @@ export default function LojaPage() {
                   type="submit"
                   className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition-colors"
                 >
-                  Confirmar Pedido
+                  Continuar para Pagamento
                 </button>
                 <button
                   type="button"
@@ -565,6 +624,110 @@ export default function LojaPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Method Modal */}
+      {showPayment && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="mb-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Forma de Pagamento</h3>
+                <button 
+                  onClick={() => setShowPayment(false)} 
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Selecione como deseja pagar seu pedido
+              </p>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              {paymentMethods.filter(method => method.enabled).map(method => {
+                const IconComponent = method.icon
+                return (
+                  <button
+                    key={method.id}
+                    onClick={() => setSelectedPaymentMethod(method)}
+                    className={`w-full p-4 border rounded-lg text-left transition-all hover:shadow-md ${
+                      selectedPaymentMethod?.id === method.id
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${
+                        selectedPaymentMethod?.id === method.id
+                          ? 'bg-primary-100 text-primary-600'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{method.name}</h4>
+                        <p className="text-sm text-gray-500">{method.description}</p>
+                      </div>
+                      {selectedPaymentMethod?.id === method.id && (
+                        <div className="w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {selectedPaymentMethod && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-blue-800 mb-2">Resumo do Pedido</h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Total:</span>
+                    <span className="font-medium">R$ {getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Forma de pagamento:</span>
+                    <span className="font-medium">{selectedPaymentMethod.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Entrega:</span>
+                    <span className="font-medium">
+                      {customerData.tipoEntrega === 'delivery' ? 'Delivery' : 'Retirada'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowPayment(false)
+                  setShowCheckout(true)
+                }}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </button>
+              <button
+                onClick={handleSubmitOrder}
+                disabled={!selectedPaymentMethod}
+                className={`flex-1 py-2 px-4 rounded-md transition-colors ${
+                  selectedPaymentMethod
+                    ? 'bg-primary-600 text-white hover:bg-primary-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Confirmar Pedido
+              </button>
+            </div>
           </div>
         </div>
       )}
