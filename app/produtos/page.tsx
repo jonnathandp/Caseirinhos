@@ -312,9 +312,10 @@ export default function ProdutosPage() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      product.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' +
+                      (product.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')
+                    }>
                       {product.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                   </div>
