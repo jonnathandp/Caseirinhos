@@ -135,44 +135,54 @@ export default function PedidosPage() {
         const exemploOrders = [
           {
             id: 'exemplo-1',
-            numero: '001',
-            clienteNome: 'Maria Silva',
+            numero: 1,
+            cliente: {
+              nome: 'Maria Silva',
+              telefone: '(11) 99999-9999',
+              endereco: 'Rua das Flores, 123'
+            },
+            itens: [
+              {
+                produto: 'Brigadeiro Gourmet',
+                quantidade: 1,
+                preco: 3.50
+              },
+              {
+                produto: 'Bolo Formigueiro',
+                quantidade: 1,
+                preco: 25.00
+              }
+            ],
             total: 28.50,
             formaPagamento: 'PIX',
             tipoEntrega: 'delivery',
-            endereco: 'Rua das Flores, 123',
-            status: 'PENDENTE',
-            dataPedido: new Date().toISOString(),
+            status: 'PENDENTE' as const,
+            dataEntrega: new Date().toISOString(),
             observacoes: 'Pedido de exemplo - Sem glúten por favor',
-            items: [
-              {
-                produtoNome: 'Brigadeiro Gourmet',
-                quantidade: 1,
-                precoUnitario: 3.50
-              },
-              {
-                produtoNome: 'Bolo Formigueiro',
-                quantidade: 1,
-                precoUnitario: 25.00
-              }
-            ]
+            createdAt: new Date().toISOString()
           },
           {
             id: 'exemplo-2',
-            numero: '002',
-            clienteNome: 'João Santos',
+            numero: 2,
+            cliente: {
+              nome: 'João Santos',
+              telefone: '(11) 88888-8888',
+              endereco: ''
+            },
+            itens: [
+              {
+                produto: 'Bolo de Chocolate',
+                quantidade: 1,
+                preco: 45.00
+              }
+            ],
             total: 45.00,
             formaPagamento: 'Cartão',
             tipoEntrega: 'retirada',
-            status: 'PRONTO',
-            dataPedido: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
-            items: [
-              {
-                produtoNome: 'Bolo de Chocolate',
-                quantidade: 1,
-                precoUnitario: 45.00
-              }
-            ]
+            status: 'PRONTO' as const,
+            dataEntrega: new Date(Date.now() + 86400000).toISOString(), // 1 dia no futuro
+            observacoes: '',
+            createdAt: new Date(Date.now() - 86400000).toISOString() // 1 dia atrás
           }
         ]
         setOrders(exemploOrders)
