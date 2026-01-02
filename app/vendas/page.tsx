@@ -21,6 +21,7 @@ interface DailyStats {
   data: string
   vendas: number
   faturamento: number
+  periodo?: string
 }
 
 export default function VendasPage() {
@@ -29,6 +30,10 @@ export default function VendasPage() {
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState('7')
+  const [viewType, setViewType] = useState<'daily' | 'weekly' | 'monthly' | 'closing'>('daily')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -42,12 +47,21 @@ export default function VendasPage() {
       loadSalesData()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, selectedPeriod])
+  }, [session, selectedPeriod, viewType, selectedDate, selectedMonth])
 
   const loadSalesData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/vendas?periodo=${selectedPeriod}`)
+      let url = `/api/vendas?periodo=${selectedPeriod}&tipo=${viewType}`
+      
+      if (viewType === 'closing' && selectedDate) {
+        url += `&data=${selectedDate}`
+      }
+      if (viewType === 'monthly' && selectedMonth) {
+        url += `&mes=${selectedMonth}`
+      }
+      
+      const response = await fetch(url)
       
       if (response.ok) {
         const data = await response.json()
@@ -133,15 +147,83 @@ export default function VendasPage() {
                 <p className="text-gray-600">Relatórios e análises de vendas</p>
               </div>
             </div>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="7">Últimos 7 dias</option>
-              <option value="30">Últimos 30 dias</option>
-              <option value="90">Últimos 90 dias</option>
-            </select>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Toggle de Visualização */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewType('daily')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    viewType === 'daily'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Total
+                </button>
+                <button
+                  onClick={() => setViewType('closing')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    viewType === 'closing'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Diário
+                </button>
+                <button
+                  onClick={() => setViewType('weekly')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    viewType === 'weekly'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Semanal
+                </button>
+                <button
+                  onClick={() => setViewType('monthly')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    viewType === 'monthly'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Mensal
+                </button>
+              </div>
+              
+              {/* Seletores Específicos */}
+              {viewType === 'closing' && (
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                />
+              )}
+              
+              {viewType === 'monthly' && (
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Selecione o mês"
+                />
+              )}
+              
+              {(viewType === 'daily' || viewType === 'weekly') && (
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 90 dias</option>
+                </select>
+              )}
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -183,20 +265,129 @@ export default function VendasPage() {
             </div>
           </div>
 
-          {/* Daily Performance Chart */}
+          {/* Resumo de Fechamento - Semanal/Mensal/Diário */}
+          {(viewType === 'weekly' || viewType === 'monthly' || viewType === 'closing') && dailyStats.length > 0 && (
+            <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-6 mb-8 border border-primary-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-0">
+                  📊 Resumo do Fechamento {viewType === 'weekly' ? 'Semanal' : viewType === 'monthly' ? 'Mensal' : 'Diário'}
+                </h3>
+                {/* Botões de Ação para Fechamento */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const totalPeriodos = dailyStats.length
+                      const totalFaturamento = dailyStats.reduce((sum, stat) => sum + stat.faturamento, 0)
+                      const mediaPorPeriodo = totalFaturamento / totalPeriodos
+                      const tipoTexto = viewType === 'weekly' ? 'Semanal' : viewType === 'monthly' ? 'Mensal' : 'Diário'
+                      const unidadeTexto = viewType === 'weekly' ? 'semanas' : viewType === 'monthly' ? 'meses' : 'dia'
+                      const unidadeSingular = viewType === 'weekly' ? 'semana' : viewType === 'monthly' ? 'mês' : 'dia'
+                      
+                      alert(`📊 Resumo do Fechamento ${tipoTexto}:\n\n` +
+                        `• ${totalPeriodos} ${totalPeriodos === 1 ? unidadeSingular : unidadeTexto} analisados\n` +
+                        `• Faturamento Total: R$ ${totalFaturamento.toFixed(2)}\n` +
+                        `• Média por ${unidadeSingular}: R$ ${mediaPorPeriodo.toFixed(2)}`)
+                    }}
+                    className="px-3 py-1.5 text-xs bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors"
+                  >
+                    📋 Resumo
+                  </button>
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                  >
+                    📄 Relatório
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Períodos Analisados</p>
+                  <p className="text-2xl font-bold text-primary-600">{dailyStats.length}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Melhor Período</p>
+                  <div className="text-sm font-medium text-gray-900">
+                    {(() => {
+                      const melhorPeriodo = dailyStats.reduce((max, curr) => 
+                        curr.faturamento > max.faturamento ? curr : max, dailyStats[0])
+                      return viewType === 'weekly' ? melhorPeriodo.periodo : melhorPeriodo.data
+                    })()}
+                    <br />
+                    <span className="text-primary-600 font-bold">
+                      R$ {dailyStats.reduce((max, curr) => 
+                        curr.faturamento > max.faturamento ? curr : max, dailyStats[0]).faturamento.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Média por {viewType === 'weekly' ? 'Semana' : 'Mês'}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    R$ {(dailyStats.reduce((sum, stat) => sum + stat.faturamento, 0) / dailyStats.length).toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Total de Vendas</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {dailyStats.reduce((sum, stat) => sum + stat.vendas, 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Performance Chart */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Diária</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-0">
+                {viewType === 'daily' ? 'Performance Total' : 
+                 viewType === 'closing' ? 'Fechamento do Dia' :
+                 viewType === 'weekly' ? 'Performance Semanal' : 
+                 'Performance Mensal'}
+              </h3>
+              {/* Ações Rápidas para Fechamento */}
+              {(viewType === 'weekly' || viewType === 'monthly') && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const totalPeriodos = dailyStats.length
+                      const totalFaturamento = dailyStats.reduce((sum, stat) => sum + stat.faturamento, 0)
+                      const mediaPorPeriodo = totalFaturamento / totalPeriodos
+                      alert(`📊 Resumo do Fechamento ${viewType === 'weekly' ? 'Semanal' : 'Mensal'}:\n\n` +
+                        `• ${totalPeriodos} ${viewType === 'weekly' ? 'semanas' : 'meses'} analisados\n` +
+                        `• Faturamento Total: R$ ${totalFaturamento.toFixed(2)}\n` +
+                        `• Média por ${viewType === 'weekly' ? 'semana' : 'mês'}: R$ ${mediaPorPeriodo.toFixed(2)}`)
+                    }}
+                    className="px-3 py-1.5 text-xs bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors"
+                  >
+                    📋 Resumo
+                  </button>
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                  >
+                    📄 Relatório
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
               {dailyStats.map((stat, index) => (
-                <div key={stat.data} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                <div key={stat.data || index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-gray-400 mr-3" />
                     <span className="text-sm font-medium text-gray-900">
-                      {new Date(stat.data).toLocaleDateString('pt-BR', { 
-                        weekday: 'short', 
-                        day: '2-digit', 
-                        month: 'short' 
-                      })}
+                      {viewType === 'daily' ? (
+                        new Date(stat.data).toLocaleDateString('pt-BR', { 
+                          weekday: 'short', 
+                          day: '2-digit', 
+                          month: 'short' 
+                        })
+                      ) : viewType === 'weekly' ? (
+                        stat.periodo || stat.data
+                      ) : (
+                        stat.periodo || stat.data
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center space-x-6">
@@ -319,6 +510,128 @@ export default function VendasPage() {
           </div>
         </div>
       </div>
+      
+      {/* Modal de Relatório Simplificado */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto w-full">
+            {/* Cabeçalho Simplificado */}
+            <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold">
+                  🍰 Relatório de Fechamento
+                </h2>
+                <p className="text-primary-200 text-sm">
+                  {viewType === 'daily' ? 'Período Total' : 
+                   viewType === 'closing' ? `Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
+                   viewType === 'weekly' ? 'Relatório Semanal' : 
+                   selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="text-white hover:text-primary-200 text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Resumo Principal */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                  <p className="text-green-600 text-sm font-medium">Faturamento</p>
+                  <p className="text-2xl font-bold text-green-700">R$ {totalRevenue.toFixed(2)}</p>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
+                  <p className="text-blue-600 text-sm font-medium">Vendas</p>
+                  <p className="text-2xl font-bold text-blue-700">{totalSales}</p>
+                </div>
+                
+                <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
+                  <p className="text-purple-600 text-sm font-medium">Ticket Médio</p>
+                  <p className="text-2xl font-bold text-purple-700">R$ {averageTicket.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Lista de Vendas Simplificada */}
+              {sales.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">
+                    📋 Vendas do Período
+                  </h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {sales.map((sale, index) => (
+                      <div key={sale.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">#{String(index + 1).padStart(3, '0')}</span>
+                            <span className="font-medium text-gray-900">{sale.cliente}</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {new Date(sale.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} • 
+                            {sale.produtos.length} {sale.produtos.length === 1 ? 'item' : 'itens'} • 
+                            {sale.metodo === 'dinheiro' ? 'Dinheiro' : sale.metodo === 'pix' ? 'PIX' : sale.metodo === 'cartao' ? 'Cartão' : 'Crédito'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-green-600">R$ {sale.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Métodos de Pagamento */}
+              {sales.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">💳 Métodos de Pagamento</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(() => {
+                      const metodos = sales.reduce((acc, sale) => {
+                        const metodo = sale.metodo === 'dinheiro' ? 'Dinheiro' : 
+                                     sale.metodo === 'pix' ? 'PIX' : 
+                                     sale.metodo === 'cartao' ? 'Cartão' : 'Crédito'
+                        acc[metodo] = (acc[metodo] || 0) + sale.total
+                        return acc
+                      }, {} as Record<string, number>)
+                      
+                      return Object.entries(metodos).map(([metodo, valor]) => (
+                        <div key={metodo} className="bg-gray-50 p-2 rounded text-center">
+                          <p className="text-xs text-gray-600">{metodo}</p>
+                          <p className="font-semibold text-gray-900">R$ {valor.toFixed(2)}</p>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Rodapé */}
+              <div className="text-center text-gray-400 text-xs pt-4 border-t">
+                Relatório gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-between">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm"
+              >
+                🖨️ Imprimir
+              </button>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
     </AppLayout>
   )
 }
