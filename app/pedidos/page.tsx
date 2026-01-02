@@ -72,12 +72,6 @@ export default function PedidosPage() {
     }
   }, [status])
 
-  useEffect(() => {
-    if (session) {
-      loadOrders()
-    }
-  }, [session, loadOrders])
-
   const loadOrders = useCallback(async () => {
     try {
       console.log('Carregando pedidos da API...')
@@ -106,6 +100,12 @@ export default function PedidosPage() {
       setLoading(false)
     }
   }, [selectedPeriod])
+
+  useEffect(() => {
+    if (session) {
+      loadOrders()
+    }
+  }, [session, loadOrders])
 
   const handleCreateSampleOrders = async () => {
     try {
