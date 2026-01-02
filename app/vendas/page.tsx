@@ -52,13 +52,13 @@ export default function VendasPage() {
   const loadSalesData = async () => {
     try {
       setLoading(true)
-      let url = \`/api/vendas?periodo=\${selectedPeriod}&tipo=\${viewType}\`
+      let url = `/api/vendas?periodo=${selectedPeriod}&tipo=${viewType}`
       
       if (viewType === 'closing' && selectedDate) {
-        url += \`&data=\${selectedDate}\`
+        url += `&data=${selectedDate}`
       }
       if (viewType === 'monthly' && selectedMonth) {
-        url += \`&mes=\${selectedMonth}\`
+        url += `&mes=${selectedMonth}`
       }
       
       const response = await fetch(url)
@@ -87,7 +87,7 @@ export default function VendasPage() {
       const response = await fetch('/api/seed-vendas', { method: 'POST' })
       if (response.ok) {
         const result = await response.json()
-        alert(\`✅ \${result.message}\`)
+        alert(`✅ ${result.message}`)
         loadSalesData()
       } else {
         alert('❌ Erro ao criar vendas de exemplo')
@@ -156,41 +156,41 @@ export default function VendasPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setViewType('daily')}
-                  className={\`px-4 py-2 rounded-md text-sm font-medium transition-colors \${
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewType === 'daily'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }\`}
+                  }`}
                 >
                   Total
                 </button>
                 <button
                   onClick={() => setViewType('closing')}
-                  className={\`px-4 py-2 rounded-md text-sm font-medium transition-colors \${
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewType === 'closing'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }\`}
+                  }`}
                 >
                   Diário
                 </button>
                 <button
                   onClick={() => setViewType('weekly')}
-                  className={\`px-4 py-2 rounded-md text-sm font-medium transition-colors \${
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewType === 'weekly'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }\`}
+                  }`}
                 >
                   Semanal
                 </button>
                 <button
                   onClick={() => setViewType('monthly')}
-                  className={\`px-4 py-2 rounded-md text-sm font-medium transition-colors \${
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     viewType === 'monthly'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }\`}
+                  }`}
                 >
                   Mensal
                 </button>
@@ -397,11 +397,11 @@ export default function VendasPage() {
             <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold">
-                  ��� Relatório de Fechamento
+                  🍰 Relatório de Fechamento
                 </h2>
                 <p className="text-primary-200 text-sm">
                   {viewType === 'daily' ? 'Período Total' : 
-                   viewType === 'closing' ? \`Dia \${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}\` :
+                   viewType === 'closing' ? `Dia ${selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}` :
                    viewType === 'weekly' ? 'Relatório Semanal' : 
                    selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'}) : 'Mês'}
                 </p>
@@ -437,7 +437,7 @@ export default function VendasPage() {
               {sales.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">
-                    ��� Vendas do Período
+                    📋 Vendas do Período
                   </h3>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {sales.map((sale, index) => (
@@ -465,7 +465,7 @@ export default function VendasPage() {
               {/* Métodos de Pagamento */}
               {sales.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">�� Métodos de Pagamento</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">💳 Métodos de Pagamento</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {(() => {
                       const metodos = sales.reduce((acc, sale) => {
@@ -499,7 +499,7 @@ export default function VendasPage() {
                 onClick={() => window.print()}
                 className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm"
               >
-                ���️ Imprimir
+                🖨️ Imprimir
               </button>
               <button
                 onClick={() => setShowReportModal(false)}
