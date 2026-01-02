@@ -284,11 +284,23 @@ export default function LojaPage() {
           dataEntrega: ''
         })
       } else {
-        alert('Erro ao enviar pedido. Tente novamente.')
+        // Capturar detalhes do erro
+        let errorDetails = 'Erro desconhecido'
+        try {
+          const errorData = await response.json()
+          errorDetails = errorData.details || errorData.error || `HTTP ${response.status}`
+          console.error('Erro detalhado da API:', errorData)
+        } catch (parseError) {
+          errorDetails = `HTTP ${response.status} - ${response.statusText}`
+          console.error('Erro ao parsear resposta de erro:', parseError)
+        }
+        
+        alert(`Erro ao enviar pedido: ${errorDetails}\n\nTente novamente ou entre em contato conosco.`)
       }
     } catch (error) {
       console.error('Erro ao enviar pedido:', error)
-      alert('Erro ao enviar pedido. Tente novamente.')
+      const errorMessage = error instanceof Error ? error.message : 'Erro de conexão'
+      alert(`Erro ao enviar pedido: ${errorMessage}\n\nVerifique sua conexão e tente novamente.`)
     }
   }
 

@@ -109,14 +109,55 @@ export async function POST(request: NextRequest) {
       items 
     } = await request.json()
 
+    console.log('API: Dados recebidos:', JSON.stringify({
+      clienteNome,
+      clienteTelefone,
+      total,
+      tipoEntrega,
+      formaPagamento,
+      endereco,
+      dataEntrega,
+      observacoes,
+      status,
+      itemsCount: items?.length || 0
+    }, null, 2))
+
+    // Validação básica
+    if (!clienteNome) {
+      console.error('API: Nome do cliente é obrigatório')
+      return NextResponse.json({ error: 'Nome do cliente é obrigatório' }, { status: 400 })
+    }
+
+    if (!total || total <= 0) {
+      console.error('API: Total deve ser maior que zero')
+      return NextResponse.json({ error: 'Total deve ser maior que zero' }, { status: 400 })
+    }
+
     console.log('API: Criando novo pedido para cliente:', clienteNome)
+
+    // Verificar conexão com banco
+    try {
+      await prisma.$connect()
+      console.log('API: Conectado ao banco de dados')
+    } catch (dbError) {
+      console.error('API: Erro de conexão com banco:', dbError)
+      return NextResponse.json({ 
+        error: 'Erro de conexão com banco de dados',
+        details: dbError instanceof Error ? dbError.message : 'Erro desconhecido'
+      }, { status: 500 })
+    }
 
     // Buscar ou criar cliente
     let cliente = null
     if (clienteTelefone) {
-      cliente = await prisma.customer.findFirst({
-        where: { telefone: clienteTelefone }
-      })
+      try {
+        cliente = await prisma.customer.findFirst({
+          where: { telefone: clienteTelefone }
+        })
+        console.log('API: Cliente existente encontrado:', cliente?.id || 'não encontrado')
+      } catch (error) {
+        console.warn('API: Erro ao buscar cliente existente:', error)
+      }
     }
 
     if (!cliente && clienteNome) {
@@ -135,52 +176,94 @@ export async function POST(request: NextRequest) {
     }
 
     // Contar total de pedidos para gerar número sequencial de 3 dígitos
-    const totalPedidos = await prisma.order.count()
+    let totalPedidos = 0
+    try {
+      totalPedidos = await prisma.order.count()
+      console.log('API: Total de pedidos existentes:', totalPedidos)
+    } catch (error) {
+      console.warn('API: Erro ao contar pedidos, usando 0:', error)
+    }
+    
     const numeroPedido = String(totalPedidos + 1).padStart(3, '0')
+    console.log('API: Número do novo pedido:', numeroPedido)
 
     // Criar o pedido
-    const pedido = await prisma.order.create({
-      data: {
-        clienteId: cliente?.id || null,
-        clienteNome,
-        total,
-        status: status || 'PENDENTE',
-        tipoEntrega: tipoEntrega || 'retirada',
-        formaPagamento: formaPagamento || 'Dinheiro',
-        endereco,
-        dataEntrega: dataEntrega ? new Date(dataEntrega) : null,
-        observacoes
-      }
-    })
+    let pedido
+    try {
+      pedido = await prisma.order.create({
+        data: {
+          clienteId: cliente?.id || null,
+          clienteNome,
+          total: Number(total),
+          status: status || 'PENDENTE',
+          tipoEntrega: tipoEntrega || 'retirada',
+          formaPagamento: formaPagamento || 'Dinheiro',
+          endereco: endereco || null,
+          dataEntrega: dataEntrega ? new Date(dataEntrega) : null,
+          observacoes: observacoes || null
+        }
+      })
+      console.log('API: Pedido criado:', pedido.id)
+    } catch (error) {
+      console.error('API: Erro ao criar pedido:', error)
+      return NextResponse.json({ 
+        error: 'Erro ao criar pedido',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      }, { status: 500 })
+    }
 
     // Criar os itens do pedido
     if (items && items.length > 0) {
-      await Promise.all(items.map((item: any) => 
-        prisma.orderItem.create({
-          data: {
+      try {
+        console.log('API: Criando', items.length, 'itens do pedido')
+        await Promise.all(items.map((item: any, index: number) => {
+          console.log(`API: Item ${index + 1}:`, JSON.stringify({
             orderId: pedido.id,
             productId: item.productId,
             produtoNome: item.produtoNome,
             quantidade: item.quantidade,
             precoUnitario: item.precoUnitario,
             subtotal: item.subtotal
-          }
-        })
-      ))
+          }, null, 2))
+          
+          return prisma.orderItem.create({
+            data: {
+              orderId: pedido.id,
+              productId: item.productId || null,
+              produtoNome: item.produtoNome,
+              quantidade: Number(item.quantidade),
+              precoUnitario: Number(item.precoUnitario),
+              subtotal: Number(item.subtotal)
+            }
+          })
+        }))
+        console.log('API: Todos os itens criados com sucesso')
+      } catch (error) {
+        console.error('API: Erro ao criar itens:', error)
+        // Não retornar erro aqui - o pedido principal foi criado
+        console.log('API: Continuando sem alguns itens devido ao erro')
+      }
     }
 
     // Buscar o pedido completo
-    const pedidoCompleto = await prisma.order.findUnique({
-      where: { id: pedido.id },
-      include: {
-        cliente: true,
-        items: {
-          include: {
-            product: true
+    let pedidoCompleto
+    try {
+      pedidoCompleto = await prisma.order.findUnique({
+        where: { id: pedido.id },
+        include: {
+          cliente: true,
+          items: {
+            include: {
+              product: true
+            }
           }
         }
-      }
-    })
+      })
+      console.log('API: Pedido completo carregado')
+    } catch (error) {
+      console.warn('API: Erro ao carregar pedido completo, retornando básico:', error)
+      pedidoCompleto = pedido
+    }
 
     // Adicionar número sequencial ao resultado
     const pedidoComNumero = {
@@ -191,7 +274,18 @@ export async function POST(request: NextRequest) {
     console.log(`API: Pedido #${numeroPedido} (${pedido.id}) criado com sucesso`)
     return NextResponse.json(pedidoComNumero, { status: 201 })
   } catch (error) {
-    console.error('Erro ao criar pedido:', error)
-    return NextResponse.json({ error: 'Erro ao criar pedido' }, { status: 500 })
+    console.error('API: Erro geral ao criar pedido:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    return NextResponse.json({ 
+      error: 'Erro ao criar pedido', 
+      details: errorMessage,
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
+  } finally {
+    try {
+      await prisma.$disconnect()
+    } catch (error) {
+      console.warn('API: Erro ao desconectar do banco:', error)
+    }
   }
 }
