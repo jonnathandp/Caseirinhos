@@ -89,7 +89,7 @@ export default function AppLayout({ children }: SidebarProps) {
                 >
                   <a
                     href={item.href}
-                    className={`sidebar-item ${
+                    className={`sidebar-item group ${
                       isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'
                     }`}
                   >
