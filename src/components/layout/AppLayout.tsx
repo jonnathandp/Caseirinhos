@@ -45,20 +45,21 @@ export default function AppLayout({ children }: SidebarProps) {
       {/* Overlay para mobile quando sidebar está aberta */}
       {isMobile && sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity"
           onClick={toggleSidebar}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 bg-white shadow-lg sidebar-transition
+        fixed inset-y-0 left-0 z-50 bg-white shadow-xl sidebar-transition
         ${sidebarOpen ? 'w-64' : 'w-16'}
         ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Logo e botão toggle */}
-          <div className="flex items-center justify-between h-16 px-3 border-b border-gray-200">
+          <div className="flex-shrink-0 flex items-center justify-between h-16 px-3 border-b border-gray-200">
             <div className={`flex items-center sidebar-transition ${!sidebarOpen && 'opacity-0'}`}>
               <span className="text-2xl mr-2">🍰</span>
               <div className={`${!sidebarOpen && 'hidden'}`}>
@@ -76,39 +77,45 @@ export default function AppLayout({ children }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto sidebar-scrollbar">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-              const Icon = item.icon
-              
-              return (
-                <Tooltip 
-                  key={item.name} 
-                  content={item.name} 
-                  show={!sidebarOpen && !isMobile}
-                >
-                  <a
-                    href={item.href}
-                    className={`sidebar-item group ${
-                      isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'
-                    }`}
+          <nav className="flex-1 px-3 py-2 space-y-1 overflow-hidden">
+            <div className="space-y-1">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href
+                const Icon = item.icon
+                
+                return (
+                  <Tooltip 
+                    key={item.name} 
+                    content={item.name} 
+                    show={!sidebarOpen && !isMobile}
                   >
-                    <Icon className={`h-5 w-5 flex-shrink-0 ${
-                      isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
-                    }`} />
-                    <span className={`ml-3 sidebar-transition ${
-                      !sidebarOpen ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'
-                    }`}>
-                      {item.name}
-                    </span>
-                  </a>
-                </Tooltip>
-              )
-            })}
+                    <a
+                      href={item.href}
+                      className={`
+                        flex items-center px-3 py-2 text-sm font-medium rounded-lg sidebar-transition group
+                        ${isActive 
+                          ? 'bg-primary-100 text-primary-700 shadow-sm' 
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-sm'
+                        }
+                      `}
+                    >
+                      <Icon className={`h-5 w-5 flex-shrink-0 ${
+                        isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      <span className={`ml-3 sidebar-transition ${
+                        !sidebarOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
+                      }`}>
+                        {item.name}
+                      </span>
+                    </a>
+                  </Tooltip>
+                )
+              })}
+            </div>
           </nav>
 
           {/* User info e logout */}
-          <div className="border-t border-gray-200 p-3">
+          <div className="flex-shrink-0 border-t border-gray-200 p-3">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
@@ -129,7 +136,11 @@ export default function AppLayout({ children }: SidebarProps) {
               )}
               <button
                 onClick={handleSignOut}
-                className="ml-auto p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded sidebar-transition"
+                className={`
+                  p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg sidebar-transition
+                  focus:outline-none focus:ring-2 focus:ring-primary-500
+                  ${!sidebarOpen ? 'ml-0' : 'ml-auto'}
+                `}
                 title="Sair"
               >
                 <LogOut className="h-4 w-4" />
@@ -142,17 +153,17 @@ export default function AppLayout({ children }: SidebarProps) {
       {/* Header móvel */}
       {isMobile && (
         <div className="fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4">
+          <div className="flex items-center justify-between h-14 px-4">
             <button
               onClick={toggleSidebar}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg sidebar-transition"
               aria-label="Abrir menu"
             >
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             </button>
             <div className="flex items-center">
-              <span className="text-xl mr-2">🍰</span>
-              <h1 className="text-lg font-semibold text-gray-900">Caseirinhos</h1>
+              <span className="text-lg mr-2">🍰</span>
+              <h1 className="text-base font-semibold text-gray-900">Caseirinhos</h1>
             </div>
             <div className="flex items-center">
               <button
@@ -160,7 +171,7 @@ export default function AppLayout({ children }: SidebarProps) {
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg sidebar-transition"
                 aria-label="Sair"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -169,11 +180,11 @@ export default function AppLayout({ children }: SidebarProps) {
 
       {/* Main content */}
       <div className={`
-        flex-1 sidebar-transition
+        flex-1 sidebar-transition min-h-screen
         ${!isMobile ? (sidebarOpen ? 'ml-64' : 'ml-16') : 'ml-0'}
-        ${isMobile ? 'pt-16' : 'pt-0'}
+        ${isMobile ? 'pt-14' : 'pt-0'}
       `}>
-        <main className="flex-1 min-h-screen">
+        <main className="w-full">
           {children}
         </main>
       </div>
