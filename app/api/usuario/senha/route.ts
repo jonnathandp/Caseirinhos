@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { getServerSession } from 'next-auth/next'
 import { hash, compare } from 'bcryptjs'
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession()
     
     if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
