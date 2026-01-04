@@ -31,7 +31,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserTheme = async () => {
     try {
-      const response = await fetch('/api/configuracoes')
+      // Usar API temporária
+      const response = await fetch('/api/configuracoes-temp')
       if (response.ok) {
         const config = await response.json()
         const userTheme = config.sistema.tema as 'claro' | 'escuro'
@@ -48,10 +49,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(newTheme)
 
     if (session) {
-      // Salvar no banco via API se usuário logado
+      // Salvar no arquivo via API temporária se usuário logado
       try {
         // Primeiro buscar configurações atuais
-        const configResponse = await fetch('/api/configuracoes')
+        const configResponse = await fetch('/api/configuracoes-temp')
         if (configResponse.ok) {
           const currentConfig = await configResponse.json()
           
@@ -64,7 +65,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          await fetch('/api/configuracoes', {
+          await fetch('/api/configuracoes-temp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedConfig)

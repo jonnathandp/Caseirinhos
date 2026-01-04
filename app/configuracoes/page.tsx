@@ -80,11 +80,18 @@ export default function ConfiguracoesPage() {
   }, [status])
 
   const loadConfigData = async () => {
+    console.log('loadConfigData - Início')
     try {
-      const response = await fetch('/api/configuracoes')
+      // Usar API temporária que funciona com arquivo
+      const response = await fetch('/api/configuracoes-temp')
+      console.log('Load config response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Configurações carregadas:', data)
         setConfigData(data)
+      } else {
+        console.error('Erro ao carregar configurações:', response.status)
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error)
@@ -113,6 +120,7 @@ export default function ConfiguracoesPage() {
   }
 
   const handleSave = async () => {
+    console.log('handleSave - Início')
     if (!validateForm()) {
       alert('Por favor, corrija os erros antes de salvar')
       return
@@ -120,7 +128,9 @@ export default function ConfiguracoesPage() {
     
     setIsSaving(true)
     try {
-      const response = await fetch('/api/configuracoes', {
+      console.log('Enviando dados para API:', configData)
+      // Usar API temporária que funciona com arquivo
+      const response = await fetch('/api/configuracoes-temp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -128,11 +138,16 @@ export default function ConfiguracoesPage() {
         body: JSON.stringify(configData)
       })
       
+      console.log('Response status:', response.status)
+      const result = await response.json()
+      console.log('Response data:', result)
+      
       if (response.ok) {
         alert('Configurações salvas com sucesso!')
         setErrors({})
       } else {
-        throw new Error('Falha ao salvar')
+        console.error('Erro na resposta:', result)
+        alert(`Erro: ${result.error || 'Falha ao salvar'}`)
       }
     } catch (error) {
       console.error('Erro ao salvar configurações:', error)
