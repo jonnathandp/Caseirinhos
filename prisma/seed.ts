@@ -6,22 +6,45 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Iniciando seed do banco de dados...')
 
-  // Criar usuário admin padrão
+  // Criar usuário admin padrão com ID específico
   const hashedPassword = await bcrypt.hash('admin123', 10)
   
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@caseirinhos.com' },
+    where: { id: 'clrx8x3q50000uhtr9x7k9qz8' },
     update: {},
     create: {
+      id: 'clrx8x3q50000uhtr9x7k9qz8',
       nome: 'Administrador',
-      email: 'admin@caseirinhos.com',
+      email: 'admin@caseirinhos.local',
       senha: hashedPassword,
       tipo: UserType.ADMIN,
       ativo: true,
-    },
+    }
   })
 
-  console.log('👤 Usuário admin criado:', adminUser.email)
+  console.log('✅ Usuário admin criado:', adminUser.email)
+
+  // Criar configurações padrão
+  const defaultConfig = await prisma.configuration.upsert({
+    where: { userId: adminUser.id },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      lojaNome: 'Caseirinhos Delicious',
+      lojaEndereco: 'Rua das Delícias, 123',
+      lojaTelefone: '(11) 99999-9999',
+      lojaEmail: 'contato@caseirinhos.com',
+      lojaCnpj: '12.345.678/0001-99',
+      notifEstoqueMin: true,
+      notifNovosPedidos: true,
+      notifEmailVendas: false,
+      tema: 'claro',
+      moeda: 'BRL',
+      fuso: 'America/Sao_Paulo'
+    }
+  })
+
+  console.log('✅ Configurações padrão criadas')
 
   // Criar produtos de exemplo
   const produtos = [

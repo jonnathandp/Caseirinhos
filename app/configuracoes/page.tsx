@@ -84,8 +84,7 @@ export default function ConfiguracoesPage() {
   const loadConfigData = async () => {
     console.log('loadConfigData - Início')
     try {
-      // Usar API temporária que funciona com arquivo
-      const response = await fetch('/api/configuracoes-temp')
+      const response = await fetch('/api/configuracoes')
       console.log('Load config response status:', response.status)
       
       if (response.ok) {
@@ -135,8 +134,7 @@ export default function ConfiguracoesPage() {
     setIsSaving(true)
     try {
       console.log('Enviando dados para API:', configData)
-      // Usar API temporária que funciona com arquivo
-      const response = await fetch('/api/configuracoes-temp', {
+      const response = await fetch('/api/configuracoes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

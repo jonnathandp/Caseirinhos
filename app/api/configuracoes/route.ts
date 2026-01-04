@@ -7,11 +7,6 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession()
     console.log('Session:', session)
-    
-    // Temporário: aceitar sem autenticação para debug
-    // if (!session?.user?.email) {
-    //   return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    // }
 
     const configData = await request.json()
     console.log('Config data recebido:', configData)
@@ -29,8 +24,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email inválido' }, { status: 400 })
     }
 
-    // Para debug, usar um ID de usuário fixo
-    let userId = 'user_default_id'
+    // Usar ID fixo para usuário padrão se não há sessão
+    let userId = 'clrx8x3q50000uhtr9x7k9qz8' // ID padrão fixo
     
     // Se tem sessão, buscar usuário real
     if (session?.user?.email) {
@@ -50,6 +45,22 @@ export async function POST(request: NextRequest) {
         })
         console.log('Nome do usuário atualizado')
       }
+    } else {
+      // Criar usuário padrão se não existir
+      console.log('Verificando/criando usuário padrão')
+      const defaultUser = await prisma.user.upsert({
+        where: { id: userId },
+        update: { nome: configData.usuario.nome },
+        create: {
+          id: userId,
+          nome: configData.usuario.nome,
+          email: 'admin@caseirinhos.local',
+          tipo: 'ADMIN',
+          ativo: true
+        }
+      })
+      userId = defaultUser.id
+      console.log('Usuário padrão:', defaultUser.id)
     }
 
     // Salvar configurações
@@ -107,7 +118,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession()
     console.log('Session GET:', session)
     
-    let userId = 'user_default_id'
+    let userId = 'clrx8x3q50000uhtr9x7k9qz8' // ID padrão fixo
     let user = null
 
     // Se tem sessão, buscar usuário real
@@ -120,13 +131,25 @@ export async function GET(request: NextRequest) {
         userId = user.id
         console.log('Usuário encontrado:', user.id)
       }
+    } else {
+      // Buscar ou criar usuário padrão
+      user = await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          nome: 'Administrador',
+          email: 'admin@caseirinhos.local',
+          tipo: 'ADMIN',
+          ativo: true
+        },
+        include: { configuration: true }
+      })
+      console.log('Usuário padrão criado/encontrado:', user.id)
     }
 
     // Buscar configurações
-    const config = user?.configuration || await prisma.configuration.findUnique({
-      where: { userId }
-    })
-
+    const config = user?.configuration
     console.log('Configurações encontradas:', config ? 'SIM' : 'NÃO')
 
     // Retornar configurações ou padrões
