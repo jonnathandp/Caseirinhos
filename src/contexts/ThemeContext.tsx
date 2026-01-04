@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 
 interface ThemeContextData {
@@ -15,21 +15,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<'claro' | 'escuro'>('claro')
   const { data: session } = useSession()
 
-  useEffect(() => {
-    // Carregar tema das configurações do usuário
-    if (session) {
-      loadUserTheme()
+  const applyTheme = useCallback((theme: 'claro' | 'escuro') => {
+    const root = document.documentElement
+    
+    if (theme === 'escuro') {
+      root.classList.add('dark')
     } else {
-      // Carregar tema do localStorage se não logado
-      const savedTheme = localStorage.getItem('theme') as 'claro' | 'escuro'
-      if (savedTheme) {
-        setThemeState(savedTheme)
-        applyTheme(savedTheme)
-      }
+      root.classList.remove('dark')
     }
-  }, [session])
+  }, [])
 
-  const loadUserTheme = async () => {
+  const loadUserTheme = useCallback(async () => {
     try {
       // Usar API temporária
       const response = await fetch('/api/configuracoes-temp')
@@ -42,7 +38,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Erro ao carregar tema:', error)
     }
-  }
+  }, [applyTheme])
+
+  useEffect(() => {
+    // Carregar tema das configurações do usuário
+    if (session) {
+      loadUserTheme()
+    } else {
+      // Carregar tema do localStorage se não logado
+      const savedTheme = localStorage.getItem('theme') as 'claro' | 'escuro'
+      if (savedTheme) {
+        setThemeState(savedTheme)
+        applyTheme(savedTheme)
+      }
+    }
+  }, [session, loadUserTheme])
 
   const setTheme = async (newTheme: 'claro' | 'escuro') => {
     setThemeState(newTheme)
@@ -77,16 +87,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       // Salvar no localStorage se não logado
       localStorage.setItem('theme', newTheme)
-    }
-  }
-
-  const applyTheme = (theme: 'claro' | 'escuro') => {
-    const root = document.documentElement
-    
-    if (theme === 'escuro') {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
     }
   }
 
