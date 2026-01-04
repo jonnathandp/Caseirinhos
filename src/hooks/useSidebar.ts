@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 
 export function useSidebar() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detectar se está em modo mobile
@@ -12,19 +12,8 @@ export function useSidebar() {
       const mobile = window.innerWidth < 768
       setIsMobile(mobile)
       
-      // Em mobile, sidebar sempre inicia fechada
-      if (mobile) {
-        setSidebarOpen(false)
-      } 
-      // Em desktop, recupera o estado do localStorage
-      else {
-        const savedState = localStorage.getItem('sidebar-open')
-        if (savedState !== null) {
-          setSidebarOpen(savedState === 'true')
-        } else {
-          setSidebarOpen(true) // Default para aberto em desktop
-        }
-      }
+      // Sidebar sempre inicia fechada
+      setSidebarOpen(false)
     }
 
     // Evita flash inicial
@@ -43,13 +32,6 @@ export function useSidebar() {
       clearTimeout(timeoutId)
     }
   }, [])
-
-  // Salvar estado no localStorage (apenas para desktop)
-  useEffect(() => {
-    if (!isMobile) {
-      localStorage.setItem('sidebar-open', sidebarOpen.toString())
-    }
-  }, [sidebarOpen, isMobile])
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
