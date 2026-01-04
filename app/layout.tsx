@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
+import NotificationContainer from '@/components/NotificationContainer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -43,7 +45,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <ThemeProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+              <NotificationContainer />
+            </NotificationProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

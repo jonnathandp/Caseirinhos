@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { Settings, User, Store, Bell, Shield, Palette, Save } from 'lucide-react'
 import AppLayout from '../../src/components/layout/AppLayout'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useNotification } from '@/contexts/NotificationContext'
 
 interface ConfigData {
   loja: {
@@ -35,6 +36,7 @@ interface ConfigData {
 export default function ConfiguracoesPage() {
   const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme()
+  const { showNotification } = useNotification()
   const [activeTab, setActiveTab] = useState('loja')
   const [configData, setConfigData] = useState<ConfigData>({
     loja: {
@@ -122,7 +124,11 @@ export default function ConfiguracoesPage() {
   const handleSave = async () => {
     console.log('handleSave - Início')
     if (!validateForm()) {
-      alert('Por favor, corrija os erros antes de salvar')
+      showNotification({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Por favor, corrija os erros antes de salvar'
+      })
       return
     }
     
@@ -143,15 +149,27 @@ export default function ConfiguracoesPage() {
       console.log('Response data:', result)
       
       if (response.ok) {
-        alert('Configurações salvas com sucesso!')
+        showNotification({
+          type: 'success',
+          title: 'Sucesso!',
+          message: 'Configurações salvas com sucesso'
+        })
         setErrors({})
       } else {
         console.error('Erro na resposta:', result)
-        alert(`Erro: ${result.error || 'Falha ao salvar'}`)
+        showNotification({
+          type: 'error',
+          title: 'Erro ao salvar',
+          message: result.error || 'Falha ao salvar configurações'
+        })
       }
     } catch (error) {
       console.error('Erro ao salvar configurações:', error)
-      alert('Erro ao salvar configurações')
+      showNotification({
+        type: 'error',
+        title: 'Erro de conexão',
+        message: 'Não foi possível conectar ao servidor'
+      })
     } finally {
       setIsSaving(false)
     }
@@ -159,17 +177,29 @@ export default function ConfiguracoesPage() {
 
   const handlePasswordChange = async () => {
     if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
-      alert('Preencha todos os campos de senha')
+      showNotification({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Preencha todos os campos de senha'
+      })
       return
     }
     
     if (passwordData.new !== passwordData.confirm) {
-      alert('Nova senha e confirmação não conferem')
+      showNotification({
+        type: 'error',
+        title: 'Senhas não conferem',
+        message: 'Nova senha e confirmação devem ser iguais'
+      })
       return
     }
     
     if (passwordData.new.length < 6) {
-      alert('Nova senha deve ter pelo menos 6 caracteres')
+      showNotification({
+        type: 'warning',
+        title: 'Senha muito curta',
+        message: 'Nova senha deve ter pelo menos 6 caracteres'
+      })
       return
     }
     
@@ -186,15 +216,27 @@ export default function ConfiguracoesPage() {
       })
       
       if (response.ok) {
-        alert('Senha alterada com sucesso!')
+        showNotification({
+          type: 'success',
+          title: 'Senha alterada!',
+          message: 'Sua senha foi alterada com sucesso'
+        })
         setPasswordData({ current: '', new: '', confirm: '' })
       } else {
         const error = await response.json()
-        alert(error.message || 'Erro ao alterar senha')
+        showNotification({
+          type: 'error',
+          title: 'Erro ao alterar senha',
+          message: error.message || 'Verifique sua senha atual'
+        })
       }
     } catch (error) {
       console.error('Erro ao alterar senha:', error)
-      alert('Erro ao alterar senha')
+      showNotification({
+        type: 'error',
+        title: 'Erro de conexão',
+        message: 'Não foi possível conectar ao servidor'
+      })
     }
   }
 

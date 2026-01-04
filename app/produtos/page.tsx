@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { ShoppingBag, Search, Plus, Edit, Package, X, Image, Trash2 } from 'lucide-react'
 import AppLayout from '../../src/components/layout/AppLayout'
+import { useToast } from '@/hooks/useToast'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface Product {
   id: string
@@ -18,6 +20,7 @@ interface Product {
 
 export default function ProdutosPage() {
   const { data: session, status } = useSession()
+  const toast = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -35,6 +38,8 @@ export default function ProdutosPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     loadProducts()
@@ -66,7 +71,7 @@ export default function ProdutosPage() {
     // Validar tipo
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      alert('Tipo de arquivo não permitido. Use apenas imagens (JPG, PNG, GIF, WebP)')
+      toast.warning('Arquivo inválido', 'Use apenas imagens (JPG, PNG, GIF, WebP)')
       e.target.value = ''
       return
     }
@@ -74,7 +79,7 @@ export default function ProdutosPage() {
     // Validar tamanho (5MB)
     const maxSize = 5 * 1024 * 1024
     if (file.size > maxSize) {
-      alert('Arquivo muito grande. Máximo 5MB')
+      toast.warning('Arquivo muito grande', 'Tamanho máximo permitido: 5MB')
       e.target.value = ''
       return
     }
@@ -107,12 +112,12 @@ export default function ProdutosPage() {
         return data.url
       } else {
         const error = await response.json()
-        alert(error.error || 'Erro no upload do arquivo')
+        toast.error('Erro no upload', error.error || 'Falha ao enviar arquivo')
         return null
       }
     } catch (error) {
       console.error('Erro no upload:', error)
-      alert('Erro no upload do arquivo')
+      toast.error('Erro de conexão', 'Não foi possível enviar o arquivo')
       return null
     } finally {
       setUploading(false)
@@ -123,7 +128,7 @@ export default function ProdutosPage() {
     e.preventDefault()
     
     if (!formData.nome.trim() || !formData.categoria.trim()) {
-      alert('Nome e categoria são obrigatórios')
+      toast.warning('Campos obrigatórios', 'Nome e categoria são obrigatórios')
       return
     }
 
@@ -179,12 +184,13 @@ export default function ProdutosPage() {
         setShowForm(false)
         setEditingProduct(null)
         loadProducts()
+        toast.success('Produto salvo!', editingProduct ? 'Produto atualizado com sucesso' : 'Produto criado com sucesso')
       } else {
-        alert('Erro ao salvar produto')
+        toast.error('Erro ao salvar', 'Não foi possível salvar o produto')
       }
     } catch (error) {
       console.error('Erro ao salvar produto:', error)
-      alert('Erro ao salvar produto')
+      toast.error('Erro de conexão', 'Não foi possível conectar ao servidor')
     }
   }
 
@@ -204,22 +210,31 @@ export default function ProdutosPage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return
+  const handleDelete = (id: string) => {
+    setProductToDelete(id)
+    setShowConfirmModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return
 
     try {
-      const response = await fetch(`/api/produtos/${id}`, {
+      const response = await fetch(`/api/produtos/${productToDelete}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
         loadProducts()
+        toast.success('Produto excluído', 'Produto removido com sucesso')
       } else {
-        alert('Erro ao excluir produto')
+        toast.error('Erro ao excluir', 'Não foi possível excluir o produto')
       }
     } catch (error) {
       console.error('Erro ao excluir produto:', error)
-      alert('Erro ao excluir produto')
+      toast.error('Erro de conexão', 'Não foi possível conectar ao servidor')
+    } finally {
+      setShowConfirmModal(false)
+      setProductToDelete(null)
     }
   }
 
@@ -599,6 +614,21 @@ export default function ProdutosPage() {
           )}
         </div>
       </div>
+      
+      {/* Modal de confirmação */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title="Excluir Produto"
+        message="Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        type="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowConfirmModal(false)
+          setProductToDelete(null)
+        }}
+      />
     </AppLayout>
   )
 }
