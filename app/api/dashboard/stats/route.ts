@@ -46,9 +46,6 @@ export async function GET() {
         vendasHoje,
         vendasSemana,
         vendasMes,
-        vendasHoje,
-        vendasSemana,
-        vendasMes,
         stockData,
         // Debug: buscar alguns pedidos para verificar
         recentOrders
