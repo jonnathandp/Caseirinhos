@@ -13,63 +13,133 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Por enquanto, usar dados consistentes com as páginas mockadas
-    // até que o banco seja populado com dados reais
+    // Datas para cálculos
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    
+    const inicioSemana = new Date(hoje)
+    inicioSemana.setDate(hoje.getDate() - hoje.getDay())
+    
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+
+    // Buscar dados reais do banco
+    const [
+      totalProdutos,
+      produtosEstoqueBaixo,
+      totalClientes,
+      clientesNovos,
+      vendasHoje,
+      vendasSemana,
+      vendasMes,
+      pedidosTotal,
+      pedidosPendentes,
+      pedidosProntos
+    ] = await Promise.allSettled([
+      // Produtos
+      prisma.product.count({ where: { ativo: true } }),
+      
+      // Produtos com estoque baixo - usar query SQL direta
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM stock WHERE quantidade <= quantidade_minima`.then(
+        (result: any[]) => result[0]?.count || 0
+      ),
+      
+      // Clientes
+      prisma.customer.count(),
+      
+      // Clientes novos este mês
+      prisma.customer.count({
+        where: {
+          createdAt: {
+            gte: inicioMes
+          }
+        }
+      }),
+      
+      // Vendas hoje - somar os totais dos pedidos
+      prisma.order.aggregate({
+        _sum: {
+          total: true
+        },
+        where: {
+          createdAt: {
+            gte: hoje
+          }
+        }
+      }),
+      
+      // Vendas esta semana
+      prisma.order.aggregate({
+        _sum: {
+          total: true
+        },
+        where: {
+          createdAt: {
+            gte: inicioSemana
+          }
+        }
+      }),
+      
+      // Vendas este mês
+      prisma.order.aggregate({
+        _sum: {
+          total: true
+        },
+        where: {
+          createdAt: {
+            gte: inicioMes
+          }
+        }
+      }),
+      
+      // Pedidos total
+      prisma.order.count(),
+      
+      // Pedidos pendentes
+      prisma.order.count({
+        where: {
+          status: 'PENDENTE'
+        }
+      }),
+      
+      // Pedidos prontos
+      prisma.order.count({
+        where: {
+          status: 'PRONTO'
+        }
+      })
+    ])
+
     const stats = {
       vendas: {
-        hoje: 0,
-        semana: 0,
-        mes: 0
+        hoje: vendasHoje.status === 'fulfilled' ? (vendasHoje.value._sum.total || 0) : 0,
+        semana: vendasSemana.status === 'fulfilled' ? (vendasSemana.value._sum.total || 0) : 0,
+        mes: vendasMes.status === 'fulfilled' ? (vendasMes.value._sum.total || 0) : 0
       },
       pedidos: {
-        total: 0,
-        pendentes: 0,
-        prontos: 0
+        total: pedidosTotal.status === 'fulfilled' ? pedidosTotal.value : 0,
+        pendentes: pedidosPendentes.status === 'fulfilled' ? pedidosPendentes.value : 0,
+        prontos: pedidosProntos.status === 'fulfilled' ? pedidosProntos.value : 0
       },
       produtos: {
-        total: 2, // Corresponde aos 2 produtos mockados na página de produtos
-        estoqueBaixo: 1 // 1 produto com estoque baixo (Queijo Prato: 8 < 15)
+        total: totalProdutos.status === 'fulfilled' ? totalProdutos.value : 0,
+        estoqueBaixo: produtosEstoqueBaixo.status === 'fulfilled' ? produtosEstoqueBaixo.value : 0
       },
       clientes: {
-        total: 2, // Corresponde aos 2 clientes mockados na página de clientes
-        novos: 0
+        total: totalClientes.status === 'fulfilled' ? totalClientes.value : 0,
+        novos: clientesNovos.status === 'fulfilled' ? clientesNovos.value : 0
       }
-    }
-
-    // Tentar buscar dados reais do banco se disponível
-    try {
-      await prisma.user.findFirst()
-      
-      // Se chegou até aqui, o banco está funcionando
-      // Buscar dados reais se existirem
-      const [totalProdutos, totalClientes] = await Promise.allSettled([
-        prisma.product.count({ where: { ativo: true } }),
-        prisma.customer.count()
-      ])
-
-      // Usar dados reais se disponíveis, senão manter os mockados
-      if (totalProdutos.status === 'fulfilled' && totalProdutos.value > 0) {
-        stats.produtos.total = totalProdutos.value
-      }
-      
-      if (totalClientes.status === 'fulfilled' && totalClientes.value > 0) {
-        stats.clientes.total = totalClientes.value
-      }
-    } catch (dbError) {
-      // Banco não disponível, manter dados mockados
-      console.log('Usando dados mockados - banco não disponível')
     }
 
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error)
     
-    // Retornar dados consistentes em caso de erro
+    // Retornar dados zerados em caso de erro
     return NextResponse.json({
       vendas: { hoje: 0, semana: 0, mes: 0 },
       pedidos: { total: 0, pendentes: 0, prontos: 0 },
-      produtos: { total: 2, estoqueBaixo: 1 },
-      clientes: { total: 2, novos: 0 }
+      produtos: { total: 0, estoqueBaixo: 0 },
+      clientes: { total: 0, novos: 0 }
     })
   }
 }
