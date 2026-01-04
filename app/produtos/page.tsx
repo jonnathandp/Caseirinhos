@@ -127,14 +127,15 @@ export default function ProdutosPage() {
       return
     }
 
-    let imageUrl = formData.imagem
+    let imageUrl: string | null = formData.imagem
 
     // Se há um arquivo selecionado, fazer upload primeiro
     if (selectedFile) {
-      imageUrl = await uploadFile()
-      if (imageUrl === null) {
+      const uploadResult = await uploadFile()
+      if (uploadResult === null) {
         return // Erro no upload
       }
+      imageUrl = uploadResult
     }
 
     const productData = {
