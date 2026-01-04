@@ -41,7 +41,7 @@ export default function AppLayout({ children }: SidebarProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 w-full overflow-hidden">
       {/* Overlay para mobile quando sidebar está aberta */}
       {isMobile && sidebarOpen && (
         <div 
@@ -164,10 +164,10 @@ export default function AppLayout({ children }: SidebarProps) {
 
       {/* Main content */}
       <div className={`
-        min-h-screen
+        flex-1 min-h-screen
         ${isMobile ? 'pt-14' : 'ml-64'}
       `}>
-        <main className="w-full">
+        <main className="w-full h-full">
           {children}
         </main>
       </div>
