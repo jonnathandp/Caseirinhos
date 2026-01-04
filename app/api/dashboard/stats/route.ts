@@ -14,13 +14,25 @@ export async function GET() {
     }
 
     // Datas para cálculos
-    const hoje = new Date()
+    const agora = new Date()
+    const hoje = new Date(agora)
     hoje.setHours(0, 0, 0, 0)
     
+    // Início da semana (segunda-feira)
     const inicioSemana = new Date(hoje)
-    inicioSemana.setDate(hoje.getDate() - hoje.getDay())
+    const diaAtual = hoje.getDay()
+    const diasParaSegunda = diaAtual === 0 ? 6 : diaAtual - 1 // Se domingo (0), voltar 6 dias; senão, voltar (diaAtual - 1)
+    inicioSemana.setDate(hoje.getDate() - diasParaSegunda)
     
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+
+    console.log('Datas calculadas:', {
+      hoje: hoje.toISOString(),
+      inicioSemana: inicioSemana.toISOString(), 
+      inicioMes: inicioMes.toISOString(),
+      diaAtual,
+      diasParaSegunda
+    })
 
     try {
       // Buscar dados reais do banco
@@ -34,7 +46,9 @@ export async function GET() {
         vendasHoje,
         vendasSemana,
         vendasMes,
-        stockData
+        stockData,
+        // Debug: buscar alguns pedidos para verificar
+        recentOrders
       ] = await Promise.all([
         prisma.product.count({ where: { ativo: true } }),
         prisma.customer.count(),
@@ -67,6 +81,18 @@ export async function GET() {
             quantidade: true,
             quantidadeMinima: true
           }
+        }),
+        // Debug: buscar pedidos recentes
+        prisma.order.findMany({
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            total: true,
+            createdAt: true,
+            clienteNome: true,
+            status: true
+          }
         })
       ])
 
@@ -95,6 +121,23 @@ export async function GET() {
           novos: clientesNovos
         }
       }
+
+      console.log('Dashboard stats calculadas:', {
+        stats,
+        raw: {
+          vendasHoje: vendasHoje._sum.total,
+          vendasSemana: vendasSemana._sum.total,
+          vendasMes: vendasMes._sum.total,
+          totalPedidos,
+          recentOrders: recentOrders.map(o => ({
+            id: o.id,
+            total: o.total,
+            createdAt: o.createdAt,
+            cliente: o.clienteNome,
+            status: o.status
+          }))
+        }
+      })
 
       return NextResponse.json(stats)
 
