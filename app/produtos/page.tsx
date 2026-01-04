@@ -32,6 +32,9 @@ export default function ProdutosPage() {
     imagem: '',
     ativo: true
   })
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   useEffect(() => {
     loadProducts()
@@ -56,6 +59,66 @@ export default function ProdutosPage() {
     }
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não permitido. Use apenas imagens (JPG, PNG, GIF, WebP)')
+      e.target.value = ''
+      return
+    }
+
+    // Validar tamanho (5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert('Arquivo muito grande. Máximo 5MB')
+      e.target.value = ''
+      return
+    }
+
+    setSelectedFile(file)
+    
+    // Criar preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const uploadFile = async (): Promise<string | null> => {
+    if (!selectedFile) return null
+
+    setUploading(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', selectedFile)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.url
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Erro no upload do arquivo')
+        return null
+      }
+    } catch (error) {
+      console.error('Erro no upload:', error)
+      alert('Erro no upload do arquivo')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -64,13 +127,23 @@ export default function ProdutosPage() {
       return
     }
 
+    let imageUrl = formData.imagem
+
+    // Se há um arquivo selecionado, fazer upload primeiro
+    if (selectedFile) {
+      imageUrl = await uploadFile()
+      if (imageUrl === null) {
+        return // Erro no upload
+      }
+    }
+
     const productData = {
       nome: formData.nome.trim(),
       descricao: formData.descricao.trim() || null,
       preco: parseFloat(formData.preco) || 0,
       custo: parseFloat(formData.custo) || 0,
       categoria: formData.categoria.trim(),
-      imagem: formData.imagem.trim() || null,
+      imagem: imageUrl,
       ativo: formData.ativo
     }
 
@@ -100,6 +173,8 @@ export default function ProdutosPage() {
           imagem: '',
           ativo: true 
         })
+        setSelectedFile(null)
+        setImagePreview(null)
         setShowForm(false)
         setEditingProduct(null)
         loadProducts()
@@ -123,6 +198,8 @@ export default function ProdutosPage() {
       imagem: product.imagem || '',
       ativo: product.ativo
     })
+    setSelectedFile(null)
+    setImagePreview(product.imagem || null)
     setShowForm(true)
   }
 
@@ -195,6 +272,8 @@ export default function ProdutosPage() {
                   imagem: '',
                   ativo: true 
                 })
+                setSelectedFile(null)
+                setImagePreview(null)
                 setShowForm(true)
               }}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-colors"
@@ -310,23 +389,44 @@ export default function ProdutosPage() {
                       </div>
                     </div>
 
-                    {/* Imagem */}
+                    {/* Upload de Imagem */}
                     <div>
                       <label htmlFor="imagem" className="block text-sm font-medium text-gray-700 mb-1">
                         Imagem do Produto
                       </label>
                       <input
                         id="imagem"
-                        type="url"
-                        value={formData.imagem}
-                        onChange={(e) => setFormData({...formData, imagem: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="URL da imagem (ex: https://exemplo.com/imagem.jpg)"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                       />
-                      {formData.imagem && (
-                        <div className="mt-2">
+                      <p className="mt-1 text-sm text-gray-500">
+                        Formatos aceitos: JPG, PNG, GIF, WebP (máximo 5MB)
+                      </p>
+                      
+                      {/* Preview da imagem */}
+                      {(imagePreview || formData.imagem) && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Preview:</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImagePreview(null)
+                                setSelectedFile(null)
+                                setFormData({...formData, imagem: ''})
+                                // Reset file input
+                                const fileInput = document.getElementById('imagem') as HTMLInputElement
+                                if (fileInput) fileInput.value = ''
+                              }}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Remover imagem
+                            </button>
+                          </div>
                           <img 
-                            src={formData.imagem} 
+                            src={imagePreview || formData.imagem} 
                             alt="Preview" 
                             className="w-32 h-32 object-cover rounded-md border border-gray-300"
                             onError={(e) => {
@@ -377,9 +477,17 @@ export default function ProdutosPage() {
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+                        disabled={uploading}
+                        className={`px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white ${
+                          uploading 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-primary-600 hover:bg-primary-700'
+                        }`}
                       >
-                        {editingProduct ? 'Atualizar' : 'Criar'} Produto
+                        {uploading 
+                          ? 'Enviando...' 
+                          : `${editingProduct ? 'Atualizar' : 'Criar'} Produto`
+                        }
                       </button>
                     </div>
                   </form>
