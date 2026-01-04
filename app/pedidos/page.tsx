@@ -93,7 +93,7 @@ export default function PedidosPage() {
       }
       
       // Mapear dados da API para a interface Order
-      const mappedOrders = ordersData.map((order: any) => {
+      const mappedOrders: Order[] = ordersData.map((order: any) => {
         try {
           return {
             id: order.id,
@@ -118,9 +118,25 @@ export default function PedidosPage() {
           }
         } catch (itemError) {
           console.error('Erro ao mapear pedido:', itemError, order)
-          return null
+          return {
+            id: order.id || 'unknown',
+            numero: null,
+            cliente: {
+              nome: 'Erro ao carregar cliente',
+              telefone: null,
+              endereco: null
+            },
+            itens: [],
+            total: 0,
+            formaPagamento: 'Não informado',
+            tipoEntrega: 'retirada',
+            status: 'PENDENTE' as const,
+            dataEntrega: new Date().toISOString(),
+            observacoes: null,
+            createdAt: new Date().toISOString()
+          }
         }
-      }).filter(Boolean) // Remove itens null
+      })
 
       setOrders(mappedOrders)
     } catch (error) {
