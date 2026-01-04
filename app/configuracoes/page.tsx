@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { Settings, User, Store, Bell, Shield, Palette, Save } from 'lucide-react'
 import AppLayout from '../../src/components/layout/AppLayout'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface ConfigData {
   loja: {
@@ -33,6 +34,7 @@ interface ConfigData {
 
 export default function ConfiguracoesPage() {
   const { data: session, status } = useSession()
+  const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState('loja')
   const [configData, setConfigData] = useState<ConfigData>({
     loja: {
@@ -189,6 +191,11 @@ export default function ConfiguracoesPage() {
         [field]: value
       }
     }))
+
+    // Aplicar tema imediatamente se for alteração de tema
+    if (section === 'sistema' && field === 'tema') {
+      setTheme(value)
+    }
   }
 
   const tabs = [

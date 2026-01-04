@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession()
     
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
@@ -22,16 +23,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email inválido' }, { status: 400 })
     }
 
-    // Aqui você salvaria no banco de dados
-    // Por enquanto, vamos simular salvamento
-    console.log('Configurações sendo salvas:', configData)
-    
-    // Em um sistema real, você salvaria no banco:
-    // await prisma.configuracao.upsert({
-    //   where: { userId: session.user.id },
-    //   update: configData,
-    //   create: { ...configData, userId: session.user.id }
-    // })
+    // Buscar usuário
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
+    // Atualizar nome do usuário
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { nome: configData.usuario.nome }
+    })
+
+    // Salvar configurações
+    await prisma.configuration.upsert({
+      where: { userId: user.id },
+      update: {
+        lojaNome: configData.loja.nome,
+        lojaEndereco: configData.loja.endereco,
+        lojaTelefone: configData.loja.telefone,
+        lojaEmail: configData.loja.email,
+        lojaCnpj: configData.loja.cnpj,
+        notifEstoqueMin: configData.notificacoes.estoqueMinimo,
+        notifNovosPedidos: configData.notificacoes.novosPedidos,
+        notifEmailVendas: configData.notificacoes.emailVendas,
+        tema: configData.sistema.tema,
+        moeda: configData.sistema.moeda,
+        fuso: configData.sistema.fuso
+      },
+      create: {
+        userId: user.id,
+        lojaNome: configData.loja.nome,
+        lojaEndereco: configData.loja.endereco,
+        lojaTelefone: configData.loja.telefone,
+        lojaEmail: configData.loja.email,
+        lojaCnpj: configData.loja.cnpj,
+        notifEstoqueMin: configData.notificacoes.estoqueMinimo,
+        notifNovosPedidos: configData.notificacoes.novosPedidos,
+        notifEmailVendas: configData.notificacoes.emailVendas,
+        tema: configData.sistema.tema,
+        moeda: configData.sistema.moeda,
+        fuso: configData.sistema.fuso
+      }
+    })
 
     return NextResponse.json({ 
       success: true, 
@@ -48,38 +85,48 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession()
     
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Aqui você buscaria as configurações do banco de dados
-    // Por enquanto, retornamos configurações padrão
-    const defaultConfig = {
+    // Buscar usuário e configurações
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { configuration: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
+    // Retornar configurações ou padrões
+    const config = user.configuration
+    const responseData = {
       loja: {
-        nome: 'Caseirinhos Delicious',
-        endereco: 'Rua das Delícias, 123',
-        telefone: '(11) 99999-9999',
-        email: 'contato@caseirinhos.com',
-        cnpj: '12.345.678/0001-99'
+        nome: config?.lojaNome || 'Caseirinhos Delicious',
+        endereco: config?.lojaEndereco || 'Rua das Delícias, 123',
+        telefone: config?.lojaTelefone || '(11) 99999-9999',
+        email: config?.lojaEmail || 'contato@caseirinhos.com',
+        cnpj: config?.lojaCnpj || '12.345.678/0001-99'
       },
       usuario: {
-        nome: session.user?.name || '',
-        email: session.user?.email || '',
+        nome: user.nome,
+        email: user.email,
         telefone: ''
       },
       notificacoes: {
-        estoqueMinimo: true,
-        novosPedidos: true,
-        emailVendas: false
+        estoqueMinimo: config?.notifEstoqueMin ?? true,
+        novosPedidos: config?.notifNovosPedidos ?? true,
+        emailVendas: config?.notifEmailVendas ?? false
       },
       sistema: {
-        tema: 'claro',
-        moeda: 'BRL',
-        fuso: 'America/Sao_Paulo'
+        tema: config?.tema || 'claro',
+        moeda: config?.moeda || 'BRL',
+        fuso: config?.fuso || 'America/Sao_Paulo'
       }
     }
 
-    return NextResponse.json(defaultConfig)
+    return NextResponse.json(responseData)
     
   } catch (error) {
     console.error('Erro ao buscar configurações:', error)
