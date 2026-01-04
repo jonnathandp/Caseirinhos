@@ -41,7 +41,7 @@ export default function AppLayout({ children }: SidebarProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Overlay para mobile quando sidebar está aberta */}
       {isMobile && sidebarOpen && (
         <div 
@@ -51,88 +51,92 @@ export default function AppLayout({ children }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar - só aparece em mobile */}
-      {isMobile && (
-        <div className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          <div className="flex flex-col h-full">
-            {/* Header da sidebar */}
-            <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-              <div className="flex items-center">
-                <span className="text-2xl mr-2">🍰</span>
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">Caseirinhos</h1>
-                  <p className="text-xs text-gray-500">Delicious</p>
-                </div>
+      {/* Sidebar - sempre visível em desktop, móvel apenas quando aberta */}
+      <div className={`
+        ${isMobile ? 'fixed' : 'fixed'} inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+        ${isMobile 
+          ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full')
+          : 'translate-x-0'
+        }
+      `}>
+        <div className="flex flex-col h-full">
+          {/* Header da sidebar */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">🍰</span>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">Caseirinhos</h1>
+                <p className="text-xs text-gray-500">Delicious</p>
               </div>
+            </div>
+            {/* Só mostra o botão X em mobile */}
+            {isMobile && (
               <button
                 onClick={toggleSidebar}
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
               >
                 <X className="h-5 w-5" />
               </button>
-            </div>
+            )}
+          </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 px-4 py-4 space-y-2">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href
-                const Icon = item.icon
-                
-                return (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    onClick={toggleSidebar}
-                    className={`
-                      flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors
-                      ${isActive 
-                        ? 'bg-primary-100 text-primary-700' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }
-                    `}
-                  >
-                    <Icon className="h-5 w-5 mr-3" />
-                    {item.name}
-                  </a>
-                )
-              })}
-            </nav>
-
-            {/* User info e logout */}
-            <div className="border-t border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center mr-3">
-                    <span className="text-sm font-medium text-primary-700">
-                      {session?.user?.name?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {session?.user?.name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {session?.user?.email}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                  title="Sair"
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-4 space-y-2">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              const Icon = item.icon
+              
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  onClick={isMobile ? toggleSidebar : undefined}
+                  className={`
+                    flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors
+                    ${isActive 
+                      ? 'bg-primary-100 text-primary-700' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }
+                  `}
                 >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                  <Icon className="h-5 w-5 mr-3" />
+                  {item.name}
+                </a>
+              )
+            })}
+          </nav>
+
+          {/* User info e logout */}
+          <div className="border-t border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center mr-3">
+                  <span className="text-sm font-medium text-primary-700">
+                    {session?.user?.name?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {session?.user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {session?.user?.email}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={handleSignOut}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Header móvel */}
+      {/* Header móvel - só aparece em mobile */}
       {isMobile && (
         <div className="fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-14 px-4">
@@ -161,7 +165,7 @@ export default function AppLayout({ children }: SidebarProps) {
       {/* Main content */}
       <div className={`
         min-h-screen
-        ${isMobile ? 'pt-14' : 'pt-0'}
+        ${isMobile ? 'pt-14' : 'ml-64'}
       `}>
         <main className="w-full">
           {children}

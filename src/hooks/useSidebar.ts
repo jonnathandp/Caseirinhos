@@ -12,8 +12,13 @@ export function useSidebar() {
       const mobile = window.innerWidth < 768
       setIsMobile(mobile)
       
-      // Sidebar sempre inicia fechada
-      setSidebarOpen(false)
+      // Em mobile, sidebar inicia fechada
+      // Em desktop, sidebar inicia aberta
+      if (mobile) {
+        setSidebarOpen(false)
+      } else {
+        setSidebarOpen(true)
+      }
     }
 
     // Evita flash inicial
