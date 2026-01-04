@@ -60,25 +60,124 @@ export default function ConfiguracoesPage() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
+  const [passwordData, setPasswordData] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (status === 'loading') return
     if (status === 'unauthenticated') {
       redirect('/auth/signin')
     }
+    
+    // Carregar configurações salvas
+    loadConfigData()
   }, [status])
 
+  const loadConfigData = async () => {
+    try {
+      const response = await fetch('/api/configuracoes')
+      if (response.ok) {
+        const data = await response.json()
+        setConfigData(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error)
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+    
+    if (!configData.loja.nome.trim()) {
+      newErrors.lojaNome = 'Nome da loja é obrigatório'
+    }
+    
+    if (!configData.loja.email.trim()) {
+      newErrors.lojaEmail = 'Email é obrigatório'
+    } else if (!/\S+@\S+\.\S+/.test(configData.loja.email)) {
+      newErrors.lojaEmail = 'Email inválido'
+    }
+    
+    if (!configData.usuario.nome.trim()) {
+      newErrors.usuarioNome = 'Nome do usuário é obrigatório'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      alert('Por favor, corrija os erros antes de salvar')
+      return
+    }
+    
     setIsSaving(true)
     try {
-      // Simular salvamento das configurações
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('Configurações salvas com sucesso!')
+      const response = await fetch('/api/configuracoes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(configData)
+      })
+      
+      if (response.ok) {
+        alert('Configurações salvas com sucesso!')
+        setErrors({})
+      } else {
+        throw new Error('Falha ao salvar')
+      }
     } catch (error) {
       console.error('Erro ao salvar configurações:', error)
       alert('Erro ao salvar configurações')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
+      alert('Preencha todos os campos de senha')
+      return
+    }
+    
+    if (passwordData.new !== passwordData.confirm) {
+      alert('Nova senha e confirmação não conferem')
+      return
+    }
+    
+    if (passwordData.new.length < 6) {
+      alert('Nova senha deve ter pelo menos 6 caracteres')
+      return
+    }
+    
+    try {
+      const response = await fetch('/api/usuario/senha', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.current,
+          newPassword: passwordData.new
+        })
+      })
+      
+      if (response.ok) {
+        alert('Senha alterada com sucesso!')
+        setPasswordData({ current: '', new: '', confirm: '' })
+      } else {
+        const error = await response.json()
+        alert(error.message || 'Erro ao alterar senha')
+      }
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error)
+      alert('Erro ao alterar senha')
     }
   }
 
@@ -165,13 +264,18 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Informações da Loja</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Loja</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Loja *</label>
                       <input
                         type="text"
                         value={configData.loja.nome}
                         onChange={(e) => updateConfig('loja', 'nome', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
+                          errors.lojaNome ? 'border-red-300' : 'border-gray-300'
+                        }`}
                       />
+                      {errors.lojaNome && (
+                        <p className="mt-1 text-sm text-red-600">{errors.lojaNome}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
@@ -201,13 +305,18 @@ export default function ConfiguracoesPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                       <input
                         type="email"
                         value={configData.loja.email}
                         onChange={(e) => updateConfig('loja', 'email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
+                          errors.lojaEmail ? 'border-red-300' : 'border-gray-300'
+                        }`}
                       />
+                      {errors.lojaEmail && (
+                        <p className="mt-1 text-sm text-red-600">{errors.lojaEmail}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -218,13 +327,18 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Informações do Usuário</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
                       <input
                         type="text"
                         value={configData.usuario.nome}
                         onChange={(e) => updateConfig('usuario', 'nome', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
+                          errors.usuarioNome ? 'border-red-300' : 'border-gray-300'
+                        }`}
                       />
+                      {errors.usuarioNome && (
+                        <p className="mt-1 text-sm text-red-600">{errors.usuarioNome}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -248,11 +362,13 @@ export default function ConfiguracoesPage() {
                   
                   <div className="border-t pt-6">
                     <h4 className="text-md font-medium text-gray-900 mb-4">Alterar Senha</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Senha Atual</label>
                         <input
                           type="password"
+                          value={passwordData.current}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, current: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                         />
                       </div>
@@ -260,9 +376,29 @@ export default function ConfiguracoesPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
                         <input
                           type="password"
+                          value={passwordData.new}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, new: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Nova Senha</label>
+                        <input
+                          type="password"
+                          value={passwordData.confirm}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, confirm: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={handlePasswordChange}
+                        className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 text-white rounded-md text-sm font-medium transition-colors"
+                      >
+                        Alterar Senha
+                      </button>
                     </div>
                   </div>
                 </div>
