@@ -92,7 +92,37 @@ export default function PedidosPage() {
         return
       }
       
-      setOrders(ordersData)
+      // Mapear dados da API para a interface Order
+      const mappedOrders = ordersData.map((order: any) => {
+        try {
+          return {
+            id: order.id,
+            numero: order.numero || null,
+            cliente: {
+              nome: order.clienteNome || order.cliente?.nome || 'Cliente não identificado',
+              telefone: order.cliente?.telefone || null,
+              endereco: order.endereco || order.cliente?.endereco || null
+            },
+            itens: order.items?.map((item: any) => ({
+              produto: item.produtoNome || item.product?.nome || 'Produto não identificado',
+              quantidade: item.quantidade || 0,
+              preco: parseFloat(item.precoUnitario || item.preco || 0)
+            })) || [],
+            total: parseFloat(order.total || 0),
+            formaPagamento: order.formaPagamento || 'Não informado',
+            tipoEntrega: order.tipoEntrega || 'retirada',
+            status: order.status || 'PENDENTE',
+            dataEntrega: order.dataEntrega || order.dataPedido || new Date().toISOString(),
+            observacoes: order.observacoes || null,
+            createdAt: order.dataPedido || order.createdAt || new Date().toISOString()
+          }
+        } catch (itemError) {
+          console.error('Erro ao mapear pedido:', itemError, order)
+          return null
+        }
+      }).filter(Boolean) // Remove itens null
+
+      setOrders(mappedOrders)
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error)
       setOrders([])
@@ -358,15 +388,15 @@ export default function PedidosPage() {
                           </div>
                           <div className="ml-3 flex-1 min-w-0">
                             <h3 className="text-lg font-semibold text-gray-900 truncate">
-                              {order.cliente.nome}
+                              {order.cliente?.nome || 'Cliente não identificado'}
                             </h3>
                             <p className="text-sm text-gray-600">
-                              {new Date(order.createdAt).toLocaleDateString('pt-BR', { 
+                              {order.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { 
                                 day: '2-digit', 
                                 month: '2-digit', 
                                 hour: '2-digit', 
                                 minute: '2-digit' 
-                              })}
+                              }) : 'Data não disponível'}
                             </p>
                           </div>
                         </div>
@@ -388,7 +418,7 @@ export default function PedidosPage() {
                         <div className="flex items-center">
                           <CreditCard className="h-4 w-4 text-gray-600 mr-2" />
                           <span className="text-sm text-gray-600 truncate">
-                            {order.formaPagamento}
+                            {order.formaPagamento || 'Não informado'}
                           </span>
                         </div>
                       </div>
@@ -425,7 +455,7 @@ export default function PedidosPage() {
                               Informações do Cliente
                             </h4>
                             <div className="grid grid-cols-1 gap-3">
-                              {order.cliente.telefone && (
+                              {order.cliente?.telefone && (
                                 <div className="flex items-center">
                                   <Phone className="h-4 w-4 text-gray-400 mr-3" />
                                   <span className="text-sm text-gray-600">{order.cliente.telefone}</span>
@@ -441,7 +471,7 @@ export default function PedidosPage() {
                                   {order.tipoEntrega === 'delivery' ? 'Delivery' : 'Retirada'}
                                 </span>
                               </div>
-                              {order.cliente.endereco && (
+                              {order.cliente?.endereco && (
                                 <div className="flex items-start">
                                   <MapPin className="h-4 w-4 text-gray-400 mr-3 mt-0.5 flex-shrink-0" />
                                   <span className="text-sm text-gray-600">{order.cliente.endereco}</span>
@@ -451,7 +481,7 @@ export default function PedidosPage() {
                                 <div className="flex items-center">
                                   <Calendar className="h-4 w-4 text-gray-400 mr-3" />
                                   <span className="text-sm text-gray-600">
-                                    Entrega: {new Date(order.dataEntrega).toLocaleDateString('pt-BR')}
+                                    Entrega: {order.dataEntrega ? new Date(order.dataEntrega).toLocaleDateString('pt-BR') : 'Não informado'}
                                   </span>
                                 </div>
                               )}
@@ -462,34 +492,38 @@ export default function PedidosPage() {
                           <div>
                             <h4 className="text-sm font-medium text-gray-900 mb-3">Itens do Pedido</h4>
                             <div className="space-y-2">
-                              {order.itens.map((item, index) => (
+                              {order.itens && order.itens.length > 0 ? order.itens.map((item, index) => (
                                 <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900 truncate">
                                       {item.quantidade}x {item.produto}
                                     </p>
                                     <p className="text-xs text-gray-500">
-                                      R$ {Number(item.preco).toFixed(2)} cada
+                                      R$ {Number(item.preco || 0).toFixed(2)} cada
                                     </p>
                                   </div>
                                   <span className="text-sm font-bold text-primary-600 ml-3">
-                                    R$ {(Number(item.preco) * item.quantidade).toFixed(2)}
+                                    R$ {(Number(item.preco || 0) * Number(item.quantidade || 0)).toFixed(2)}
                                   </span>
                                 </div>
-                              ))}
+                              )) : (
+                                <div className="text-center py-4 text-gray-500">
+                                  <p className="text-sm">Nenhum item encontrado</p>
+                                </div>
+                              )}
                               
                               {/* Total */}
                               <div className="border-t border-gray-200 pt-2 mt-3">
                                 <div className="flex justify-between items-center py-2">
                                   <span className="text-base font-bold text-gray-900">Total:</span>
                                   <span className="text-lg font-bold text-green-600">
-                                    R$ {Number(order.total).toFixed(2)}
+                                    R$ {Number(order.total || 0).toFixed(2)}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">Forma de pagamento:</span>
                                   <span className="text-sm font-medium text-gray-900">
-                                    {order.formaPagamento}
+                                    {order.formaPagamento || 'Não informado'}
                                   </span>
                                 </div>
                               </div>
