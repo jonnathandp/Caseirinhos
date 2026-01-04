@@ -46,6 +46,9 @@ export async function GET() {
         vendasHoje,
         vendasSemana,
         vendasMes,
+        vendasHoje,
+        vendasSemana,
+        vendasMes,
         stockData,
         // Debug: buscar alguns pedidos para verificar
         recentOrders
@@ -64,18 +67,36 @@ export async function GET() {
         prisma.order.count({
           where: { status: 'PRONTO' }
         }),
-        prisma.order.aggregate({
-          _sum: { total: true },
-          where: { createdAt: { gte: hoje } }
-        }),
-        prisma.order.aggregate({
-          _sum: { total: true },
-          where: { createdAt: { gte: inicioSemana } }
-        }),
-        prisma.order.aggregate({
-          _sum: { total: true },
-          where: { createdAt: { gte: inicioMes } }
-        }),
+        // Vendas hoje - usar tabela Sale agrupando por orderId como na API de vendas
+        prisma.sale.groupBy({
+          by: ['orderId'],
+          where: {
+            dataVenda: { gte: hoje }
+          },
+          _sum: { subtotal: true }
+        }).then(vendas => 
+          vendas.reduce((total, venda) => total + Number(venda._sum.subtotal || 0), 0)
+        ),
+        // Vendas esta semana
+        prisma.sale.groupBy({
+          by: ['orderId'],
+          where: {
+            dataVenda: { gte: inicioSemana }
+          },
+          _sum: { subtotal: true }
+        }).then(vendas => 
+          vendas.reduce((total, venda) => total + Number(venda._sum.subtotal || 0), 0)
+        ),
+        // Vendas este mês
+        prisma.sale.groupBy({
+          by: ['orderId'],
+          where: {
+            dataVenda: { gte: inicioMes }
+          },
+          _sum: { subtotal: true }
+        }).then(vendas => 
+          vendas.reduce((total, venda) => total + Number(venda._sum.subtotal || 0), 0)
+        ),
         prisma.stock.findMany({
           select: {
             quantidade: true,
@@ -103,9 +124,9 @@ export async function GET() {
 
       const stats = {
         vendas: {
-          hoje: Number(vendasHoje._sum.total || 0),
-          semana: Number(vendasSemana._sum.total || 0),
-          mes: Number(vendasMes._sum.total || 0)
+          hoje: Number(vendasHoje || 0),
+          semana: Number(vendasSemana || 0),
+          mes: Number(vendasMes || 0)
         },
         pedidos: {
           total: totalPedidos,
@@ -125,9 +146,9 @@ export async function GET() {
       console.log('Dashboard stats calculadas:', {
         stats,
         raw: {
-          vendasHoje: vendasHoje._sum.total,
-          vendasSemana: vendasSemana._sum.total,
-          vendasMes: vendasMes._sum.total,
+          vendasHoje,
+          vendasSemana,
+          vendasMes,
           totalPedidos,
           recentOrders: recentOrders.map(o => ({
             id: o.id,
