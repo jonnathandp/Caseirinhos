@@ -38,9 +38,14 @@ export async function GET() {
       // Produtos
       prisma.product.count({ where: { ativo: true } }),
       
-      // Produtos com estoque baixo - usar query SQL direta
-      prisma.$queryRaw`SELECT COUNT(*) as count FROM stock WHERE quantidade <= quantidade_minima`.then(
-        (result: any[]) => result[0]?.count || 0
+      // Produtos com estoque baixo - buscar todos e filtrar no código
+      prisma.stock.findMany({
+        select: {
+          quantidade: true,
+          quantidadeMinima: true
+        }
+      }).then((stocks) => 
+        stocks.filter(stock => stock.quantidade <= stock.quantidadeMinima).length
       ),
       
       // Clientes
